@@ -1,7 +1,6 @@
 package store
 
 import (
-	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,106 +11,65 @@ type testStoreData struct {
 	store Store
 }
 
-func getStores() []testStoreData {
-	data := make([]testStoreData, 1)
+func TestStores(t *testing.T) {
+	// Prepare stores
+	testStores := make([]testStoreData, 1)
+	testStores[0] = testStoreData{"InMemory", NewMemoryStore()}
 
-	data[0] = testStoreData{"InMemory", NewMemoryStore()}
-	return data
-}
+	for _, testData := range testStores {
+		testData := testData // capture range variable
+		t.Run(testData.name, func(t *testing.T) {
+			t.Parallel()
 
-func TestCannotGetEmptyBucketName(t *testing.T) {
-	for _, data := range getStores() {
-		t.Run(data.name, func(t *testing.T) {
-			_, err := data.store.GetBucket("")
-			assert.Equal(t, ErrBucketNoName, err)
+			t.Run("TestCanCreateReadonlyTransaction", func(t *testing.T) {
+				t.Parallel()
+				tx, err := testData.store.Begin(false)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				assert.NotNil(t, tx)
+				assert.False(t, tx.IsWritable())
+				tx.Rollback()
+			})
+
+			t.Run("TestCanCreateWriteTransaction", func(t *testing.T) {
+				t.Parallel()
+				tx, err := testData.store.Begin(true)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				assert.NotNil(t, tx)
+				assert.True(t, tx.IsWritable())
+				tx.Rollback()
+			})
+
+			t.Run("TestLoadEmptyNameBucket", func(t *testing.T) {
+				t.Parallel()
+				tx, err := testData.store.Begin(false)
+				if err != nil {
+					t.Fatal(err)
+				}
+				defer tx.Rollback()
+
+				_, err = tx.GetBucket("")
+				assert.Equal(t, ErrBucketNoName, err)
+			})
+
+			t.Run("TestLoadUnknownBucket", func(t *testing.T) {
+				t.Parallel()
+				tx, err := testData.store.Begin(false)
+				if err != nil {
+					t.Fatal(err)
+				}
+				defer tx.Rollback()
+
+				_, err = tx.GetBucket("unknown-bucket")
+				assert.Equal(t, ErrBucketNotFound, err)
+			})
+
 		})
-	}
-}
-
-func TestCannotGetEmptyKeyName(t *testing.T) {
-	for _, data := range getStores() {
-		t.Run(data.name, func(t *testing.T) {
-			_, err := data.store.GetKey("bucket", "")
-			assert.Equal(t, ErrKeyNoName, err)
-		})
-	}
-}
-
-func TestLoadingUnknownKeyFromStore(t *testing.T) {
-	for _, data := range getStores() {
-		t.Run(data.name, func(t *testing.T) {
-			_, err := data.store.GetKey("my-bucket", "some-key")
-			assert.Equal(t, ErrKeyNotFound, err)
-		})
-	}
-}
-
-func TestSetKeyAndGetKeyFromStore(t *testing.T) {
-	for _, data := range getStores() {
-		t.Run(data.name, func(t *testing.T) {
-			var err error
-			var value1, value2 []byte
-
-			value1 = []byte("test data")
-			err = data.store.SetKey("my-bucket", "test-key", value1)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			value2, err = data.store.GetKey("my-bucket", "test-key")
-			if err != nil {
-				t.Fatal(err)
-			}
-			assert.Equal(t, value1, value2)
-		})
-	}
-}
-
-func TestSetKeyAndGetKeyFromDifferentBucket(t *testing.T) {
-	for _, data := range getStores() {
-		t.Run(data.name, func(t *testing.T) {
-			var err error
-			var value []byte
-
-			value = []byte("test data")
-			err = data.store.SetKey("my-first-bucket", "test-key", value)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			_, err = data.store.GetKey("my-second-bucket", "test-key")
-			assert.Equal(t, ErrKeyNotFound, err)
-		})
-	}
-}
-
-func TestLoadingUnknownUint64ValueFromStore(t *testing.T) {
-	for _, data := range getStores() {
-		t.Run(data.name, func(t *testing.T) {
-			_, err := data.store.GetKeyUint64("some-store", "some-key")
-			assert.Equal(t, ErrKeyNotFound, err)
-		})
-	}
-}
-
-func TestSetKeyAndGetUint64ValueFromStore(t *testing.T) {
-
-	for _, data := range getStores() {
-		t.Run(data.name, func(t *testing.T) {
-			var err error
-			var value1, value2 uint64
-
-			value1 = rand.Uint64()
-			err = data.store.SetKeyUint64("my-store", "test-key", value1)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			value2, err = data.store.GetKeyUint64("my-store", "test-key")
-			if err != nil {
-				t.Fatal(err)
-			}
-			assert.Equal(t, value1, value2)
-		})
+		testData.store.Close()
 	}
 }

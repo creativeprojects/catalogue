@@ -1,16 +1,21 @@
 package store
 
 type Store interface {
-	GetBucket(string) (Bucket, error)
-
-	GetKey(bucket, key string) ([]byte, error)
-	GetKeyUint64(bucket, key string) (uint64, error)
-
-	SetKey(bucket, key string, data []byte) error
-	SetKeyUint64(bucket, key string, data uint64) error
-
 	// Begin a transaction
 	Begin(writable bool) (Transaction, error)
+
+	// Close the store
+	Close()
+}
+
+type Transaction interface {
+	IsWritable() bool
+
+	GetBucket(string) (Bucket, error)
+	DeleteBucket(string) error
+
+	Rollback()
+	Commit()
 }
 
 type Bucket interface {
@@ -19,9 +24,6 @@ type Bucket interface {
 
 	SetKey(key string, data []byte) error
 	SetKeyUint64(key string, data uint64) error
-}
 
-type Transaction interface {
-	Rollback()
-	Commit()
+	DeleteKey(key string) error
 }

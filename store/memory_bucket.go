@@ -2,56 +2,99 @@ package store
 
 import (
 	"encoding/binary"
-	"errors"
 	"sync"
 )
 
 // MemoryBucket represents a bucket in memory (it is *never* saved)
 type MemoryBucket struct {
-	keys  map[string][]byte
-	mutex *sync.Mutex
+	readKeys    map[string][]byte
+	writeKeys   map[string][]byte
+	deletedKeys map[string]bool
+	mutex       *sync.Mutex
+	writable    bool
 }
 
 // NewMemoryBucket instantiate a new bucket in memory
-func NewMemoryBucket() *MemoryBucket {
+func NewMemoryBucket(keys map[string][]byte, writable bool) *MemoryBucket {
 	return &MemoryBucket{
-		keys:  make(map[string][]byte, 0),
-		mutex: &sync.Mutex{},
+		readKeys:    keys,
+		writeKeys:   make(map[string][]byte, 0),
+		deletedKeys: make(map[string]bool, 0),
+		mutex:       &sync.Mutex{},
+		writable:    writable,
 	}
 }
 
 // GetKey returns a key from the bucket in memory
 func (b *MemoryBucket) GetKey(key string) ([]byte, error) {
 	if b == nil {
-		return nil, errors.New("Null pointer bucket")
+		return nil, ErrNullPointerBucket
 	}
 	if key == "" {
 		return nil, ErrKeyNoName
 	}
 
+	var data []byte
+	var ok bool
+
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 
-	data, ok := b.keys[key]
-	if !ok {
+	// Was the key deleted?
+	deleted, ok := b.deletedKeys[key]
+	if ok && deleted {
 		return nil, ErrKeyNotFound
 	}
-	return data, nil
+
+	// Was the key updated?
+	data, ok = b.writeKeys[key]
+	if ok {
+		return data, nil
+	}
+
+	// Last resort: key was originally in the bucket
+	data, ok = b.readKeys[key]
+	if ok {
+		return data, nil
+	}
+	return nil, ErrKeyNotFound
 }
 
 // SetKey sets a key in the memory bucket
 func (b *MemoryBucket) SetKey(key string, data []byte) error {
 	if b == nil {
-		return errors.New("Null pointer bucket")
+		return ErrNullPointerBucket
 	}
 	if key == "" {
 		return ErrKeyNoName
+	}
+	if !b.writable {
+		return ErrBucketReadOnly
 	}
 
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 
-	b.keys[key] = data
+	b.writeKeys[key] = data
+	return nil
+}
+
+// DeleteKey deletes a key from the memory bucket
+func (b *MemoryBucket) DeleteKey(key string) error {
+	if b == nil {
+		return ErrNullPointerBucket
+	}
+	if key == "" {
+		return ErrKeyNoName
+	}
+	if !b.writable {
+		return ErrBucketReadOnly
+	}
+
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
+	b.deletedKeys[key] = true
 	return nil
 }
 

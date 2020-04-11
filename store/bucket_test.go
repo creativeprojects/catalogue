@@ -20,7 +20,7 @@ func init() {
 func getBuckets() []testBucketData {
 	data := make([]testBucketData, 1)
 
-	data[0] = testBucketData{"InMemory", NewMemoryBucket()}
+	data[0] = testBucketData{"InMemory", NewMemoryBucket(nil, true)}
 	return data
 }
 
