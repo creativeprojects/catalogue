@@ -26,6 +26,10 @@ func NewMemoryStore() *MemoryStore {
 
 // Begin a transaction
 func (s *MemoryStore) Begin(writable bool) (Transaction, error) {
+	return s.begin(writable)
+}
+
+func (s *MemoryStore) begin(writable bool) (*MemoryTransaction, error) {
 	s.transactionsMutex.Lock()
 	defer s.transactionsMutex.Unlock()
 
@@ -65,6 +69,44 @@ func (s *MemoryStore) Close() {
 	if len(s.transactions) > 0 {
 		panic(fmt.Errorf("Store was closed with %d running transaction(s)", len(s.transactions)))
 	}
+}
+
+func (s *MemoryStore) Update(job func(transaction Transaction) error) error {
+	t, err := s.begin(true)
+	if err != nil {
+		return err
+	}
+
+	// Make sure the transaction rolls back in the event of a panic.
+	defer t.Rollback()
+
+	// If an error is returned from the function then rollback and return error.
+	err = job(t)
+	if err != nil {
+		_ = t.Rollback()
+		return err
+	}
+
+	return t.Commit()
+}
+
+func (s *MemoryStore) View(job func(transaction Transaction) error) error {
+	t, err := s.begin(false)
+	if err != nil {
+		return err
+	}
+
+	// Make sure the transaction rolls back in the event of a panic.
+	defer t.Rollback()
+
+	// If an error is returned from the function then rollback and return error.
+	err = job(t)
+	if err != nil {
+		_ = t.Rollback()
+		return err
+	}
+
+	return t.Commit()
 }
 
 // getBucket returns a bucket from its name. If it does not exists, a new bucket will be created

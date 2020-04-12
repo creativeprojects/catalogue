@@ -6,6 +6,11 @@ type Store interface {
 
 	// Close the store
 	Close()
+
+	// Update wraps a write transaction around the function
+	Update(func(transaction Transaction) error) error
+	// View is a read-only view of a the database
+	View(func(transaction Transaction) error) error
 }
 
 type Transaction interface {
@@ -15,8 +20,8 @@ type Transaction interface {
 	GetBucket(string) (Bucket, error)
 	DeleteBucket(string) error
 
-	Rollback()
-	Commit()
+	Rollback() error
+	Commit() error
 }
 
 type Bucket interface {

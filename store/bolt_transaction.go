@@ -18,12 +18,12 @@ func (t *BoltTransaction) IsWritable() bool {
 	return t.tx.Writable()
 }
 
-func (t *BoltTransaction) Rollback() {
-	t.tx.Rollback()
+func (t *BoltTransaction) Rollback() error {
+	return t.tx.Rollback()
 }
 
-func (t *BoltTransaction) Commit() {
-	t.tx.Commit()
+func (t *BoltTransaction) Commit() error {
+	return t.tx.Commit()
 }
 
 // CreateBucket returns a new bucket. Returns an error if the name already exists

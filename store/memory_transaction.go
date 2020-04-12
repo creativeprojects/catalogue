@@ -31,23 +31,24 @@ func (t *MemoryTransaction) IsWritable() bool {
 	return t.writable
 }
 
-func (t *MemoryTransaction) Rollback() {
+func (t *MemoryTransaction) Rollback() error {
 	t.closing.Lock()
 	defer t.closing.Unlock()
 
 	if t.closed {
-		return
+		return nil
 	}
 	t.close()
 	t.closed = true
+	return nil
 }
 
-func (t *MemoryTransaction) Commit() {
+func (t *MemoryTransaction) Commit() error {
 	t.closing.Lock()
 	defer t.closing.Unlock()
 
 	if t.closed {
-		return
+		return nil
 	}
 
 	if t.writable {
@@ -65,6 +66,7 @@ func (t *MemoryTransaction) Commit() {
 	}
 	t.close()
 	t.closed = true
+	return nil
 }
 
 // CreateBucket returns a new bucket. Returns an error if the name already exists
@@ -94,7 +96,7 @@ func (t *MemoryTransaction) CreateBucket(bucket string) (Bucket, error) {
 		delete(t.deletedBuckets, bucket)
 	}
 
-	b := NewMemoryBucket(make(map[string][]byte), true)
+	b := newMemoryBucket(make(map[string][]byte), true)
 	t.writeBuckets[bucket] = b
 	return b, nil
 }
@@ -120,7 +122,7 @@ func (t *MemoryTransaction) GetBucket(bucket string) (Bucket, error) {
 
 	// Check for untouched existing bucket
 	if b, ok := t.readBuckets[bucket]; ok {
-		return NewMemoryBucket(b, t.writable), nil
+		return newMemoryBucket(b, t.writable), nil
 	}
 	return nil, ErrBucketNotFound
 }

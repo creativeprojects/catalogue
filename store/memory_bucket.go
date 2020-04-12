@@ -14,8 +14,8 @@ type MemoryBucket struct {
 	writable    bool
 }
 
-// NewMemoryBucket instantiate a new bucket in memory
-func NewMemoryBucket(keys map[string][]byte, writable bool) *MemoryBucket {
+// newMemoryBucket instantiate a new bucket in memory
+func newMemoryBucket(keys map[string][]byte, writable bool) *MemoryBucket {
 	return &MemoryBucket{
 		readKeys:    keys,
 		writeKeys:   make(map[string][]byte, 0),

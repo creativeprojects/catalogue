@@ -34,6 +34,20 @@ func (s *BoltStore) Close() {
 	s.db.Close()
 }
 
+func (s *BoltStore) Update(job func(transaction Transaction) error) error {
+	return s.db.Update(func(tx *bolt.Tx) error {
+		t := newBoltTransaction(tx)
+		return job(t)
+	})
+}
+
+func (s *BoltStore) View(job func(transaction Transaction) error) error {
+	return s.db.View(func(tx *bolt.Tx) error {
+		t := newBoltTransaction(tx)
+		return job(t)
+	})
+}
+
 // Test the interface
 var (
 	_ Store = &BoltStore{}
