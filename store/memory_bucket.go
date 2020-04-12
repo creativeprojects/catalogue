@@ -76,6 +76,10 @@ func (b *MemoryBucket) SetKey(key string, data []byte) error {
 	defer b.mutex.Unlock()
 
 	b.writeKeys[key] = data
+	// In case the key was previously deleted
+	if _, found := b.deletedKeys[key]; found {
+		delete(b.deletedKeys, key)
+	}
 	return nil
 }
 
@@ -95,6 +99,9 @@ func (b *MemoryBucket) DeleteKey(key string) error {
 	defer b.mutex.Unlock()
 
 	b.deletedKeys[key] = true
+	if _, found := b.writeKeys[key]; found {
+		delete(b.writeKeys, key)
+	}
 	return nil
 }
 

@@ -11,6 +11,7 @@ type Store interface {
 type Transaction interface {
 	IsWritable() bool
 
+	CreateBucket(string) (Bucket, error)
 	GetBucket(string) (Bucket, error)
 	DeleteBucket(string) error
 

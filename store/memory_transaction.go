@@ -54,7 +54,7 @@ func (t *MemoryTransaction) Commit() {
 		// Deleted buckets
 		for name, deleted := range t.deletedBuckets {
 			if deleted {
-				delete(t.store.buckets, name)
+				t.store.deleteBucket(name)
 			}
 		}
 
@@ -65,6 +65,38 @@ func (t *MemoryTransaction) Commit() {
 	}
 	t.close()
 	t.closed = true
+}
+
+// CreateBucket returns a new bucket. Returns an error if the name already exists
+func (t *MemoryTransaction) CreateBucket(bucket string) (Bucket, error) {
+	if !t.writable {
+		return nil, ErrTransactionReadonly
+	}
+	if bucket == "" {
+		return nil, ErrBucketNoName
+	}
+
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	// Check for updated buckets
+	if _, found := t.writeBuckets[bucket]; found {
+		return nil, ErrBucketNameExists
+	}
+
+	// Check for untouched existing bucket
+	if _, found := t.readBuckets[bucket]; found {
+		return nil, ErrBucketNameExists
+	}
+
+	// Remove from deleted bucket, in case it's there
+	if _, found := t.deletedBuckets[bucket]; found {
+		delete(t.deletedBuckets, bucket)
+	}
+
+	b := NewMemoryBucket(make(map[string][]byte), true)
+	t.writeBuckets[bucket] = b
+	return b, nil
 }
 
 // GetBucket returns a bucket from its name. If it does not exists, a new empty bucket will be returned.
@@ -93,13 +125,35 @@ func (t *MemoryTransaction) GetBucket(bucket string) (Bucket, error) {
 	return nil, ErrBucketNotFound
 }
 
+// DeleteBucket removes the bucket from memory
 func (t *MemoryTransaction) DeleteBucket(bucket string) error {
+	if !t.writable {
+		return ErrTransactionReadonly
+	}
+	if bucket == "" {
+		return ErrBucketNoName
+	}
+
 	t.deletedBuckets[bucket] = true
+	if _, ok := t.writeBuckets[bucket]; ok {
+		delete(t.writeBuckets, bucket)
+	}
 	return nil
 }
 
 func (t *MemoryTransaction) saveBucket(name string, b *MemoryBucket) {
-	//
+	storeBucket := t.store.getBucket(name)
+
+	// Updated keys
+	for key, value := range b.writeKeys {
+		storeBucket[key] = value
+	}
+	// Deleted keys
+	for key, deleted := range b.deletedKeys {
+		if deleted {
+			delete(storeBucket, key)
+		}
+	}
 }
 
 var (
