@@ -42,7 +42,7 @@ build-windows:
 build-all: build-mac build-linux build-windows
 
 test:
-		RAMDISK=/Volumes/RAMDisk $(GOTEST) -v $(TESTS)
+		DB_TEST_PATH=/Volumes/RAMDisk $(GOTEST) -v $(TESTS)
 
 test-short:
 		$(GOTEST) -v -short $(TESTS)

@@ -3,6 +3,13 @@ language: go
 jobs:
   include:
     - os: linux
+      go: "1.12.x"
+      cache:
+        directories:
+          - $HOME/.cache/go-build
+          - $HOME/gopath/pkg/mod
+
+    - os: linux
       go: "1.13.x"
       cache:
         directories:
@@ -38,4 +45,4 @@ install:
 
 script:
   - go build -v .
-  - go test -v ./...
+  - DB_TEST_PATH=/tmp go test -v ./...
