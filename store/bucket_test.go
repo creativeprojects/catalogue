@@ -53,34 +53,3 @@ func TestSetKeyAndGetKeyFromBucket(t *testing.T) {
 		})
 	}
 }
-
-func TestLoadingUnknownUint64ValueFromBucket(t *testing.T) {
-	for _, data := range getBuckets() {
-		t.Run(data.name, func(t *testing.T) {
-			_, err := data.bucket.GetKeyUint64("some-key")
-			assert.Equal(t, ErrKeyNotFound, err)
-		})
-	}
-}
-
-func TestSetKeyAndGetUint64ValueFromBucket(t *testing.T) {
-
-	for _, data := range getBuckets() {
-		t.Run(data.name, func(t *testing.T) {
-			var err error
-			var value1, value2 uint64
-
-			value1 = rand.Uint64()
-			err = data.bucket.SetKeyUint64("test-key", value1)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			value2, err = data.bucket.GetKeyUint64("test-key")
-			if err != nil {
-				t.Fatal(err)
-			}
-			assert.Equal(t, value1, value2)
-		})
-	}
-}

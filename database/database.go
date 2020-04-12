@@ -29,8 +29,8 @@ type Stats struct {
 	TotalVolumes     uint64
 	TotalDirectories uint64
 	TotalFiles       uint64
-	Created          *time.Time
-	LastSaved        *time.Time
+	Created          time.Time
+	LastSaved        time.Time
 }
 
 func NewDatabase(s store.Store) *Database {
@@ -55,9 +55,9 @@ func (d *Database) Init() {
 				stats.SetKey(KeyDatabaseID, bID)
 			}
 		}
-		stats.SetKey(KeyTotalVolumes, Uint64ToBytes(0))
-		stats.SetKey(KeyTotalDirectories, Uint64ToBytes(0))
-		stats.SetKey(KeyTotalFiles, Uint64ToBytes(0))
+		stats.SetKey(KeyTotalVolumes, uint64ToBytes(0))
+		stats.SetKey(KeyTotalDirectories, uint64ToBytes(0))
+		stats.SetKey(KeyTotalFiles, uint64ToBytes(0))
 
 		now := time.Now()
 		if bNow, err := now.MarshalBinary(); err == nil {
@@ -75,35 +75,53 @@ func (d *Database) Stats() Stats {
 		if err != nil {
 			return err
 		}
-		if ID, err := bucket.GetKey(KeyDatabaseID); err == nil {
-			stats.DatabaseID.UnmarshalBinary(ID)
-		}
+		stats.DatabaseID = bytesToUUID(bucket.GetKey(KeyDatabaseID))
 
-		stats.TotalVolumes, _ = bucket.GetKeyUint64(KeyTotalVolumes)
-		stats.TotalDirectories, _ = bucket.GetKeyUint64(KeyTotalDirectories)
-		stats.TotalFiles, _ = bucket.GetKeyUint64(KeyTotalFiles)
+		stats.TotalVolumes = bytesToUint64(bucket.GetKey(KeyTotalVolumes))
+		stats.TotalDirectories = bytesToUint64(bucket.GetKey(KeyTotalDirectories))
+		stats.TotalFiles = bytesToUint64(bucket.GetKey(KeyTotalFiles))
 
-		stats.Created = &time.Time{}
-		if created, err := bucket.GetKey(KeyCreated); err == nil {
-			stats.Created.UnmarshalBinary(created)
-		}
-
-		stats.LastSaved = &time.Time{}
-		if lastSaved, err := bucket.GetKey(KeyLastSaved); err == nil {
-			stats.LastSaved.UnmarshalBinary(lastSaved)
-		}
+		stats.Created = bytesToTime(bucket.GetKey(KeyCreated))
+		stats.LastSaved = bytesToTime(bucket.GetKey(KeyLastSaved))
 
 		return nil
 	})
 	return stats
 }
 
-func Uint64ToBytes(value uint64) []byte {
+func uint64ToBytes(value uint64) []byte {
 	buffer := make([]byte, 8)
 	binary.LittleEndian.PutUint64(buffer, value)
 	return buffer
 }
 
-func Int64ToBytes(value int64) []byte {
-	return Uint64ToBytes(uint64(value))
+func int64ToBytes(value int64) []byte {
+	return uint64ToBytes(uint64(value))
+}
+
+func bytesToUint64(data []byte, err error) uint64 {
+	if err != nil {
+		return 0
+	}
+	return binary.LittleEndian.Uint64(data)
+}
+
+func bytesToInt64(data []byte, err error) int64 {
+	return int64(bytesToUint64(data, err))
+}
+
+func bytesToTime(data []byte, err error) time.Time {
+	output := time.Time{}
+	if err == nil {
+		output.UnmarshalBinary(data)
+	}
+	return output
+}
+
+func bytesToUUID(data []byte, err error) uuid.UUID {
+	output := uuid.UUID{}
+	if err == nil {
+		output.UnmarshalBinary(data)
+	}
+	return output
 }

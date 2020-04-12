@@ -47,8 +47,8 @@ test: ramdisk
 test-short:
 		$(GOTEST) -v -short $(TESTS)
 
-coverage:
-		$(GOTEST) -coverprofile=$(COVERAGE_FILE) $(TESTS)
+coverage: ramdisk
+		DB_TEST_PATH=/Volumes/RAMDisk $(GOTEST) -coverprofile=$(COVERAGE_FILE) $(TESTS)
 		$(GOTOOL) cover -html=$(COVERAGE_FILE)
 
 clean:

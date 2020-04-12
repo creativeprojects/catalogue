@@ -1,7 +1,6 @@
 package store
 
 import (
-	"encoding/binary"
 	"sync"
 )
 
@@ -103,23 +102,6 @@ func (b *MemoryBucket) DeleteKey(key string) error {
 		delete(b.writeKeys, key)
 	}
 	return nil
-}
-
-// GetKeyUint64 returns a uint64 value from the bucket in memory
-func (b *MemoryBucket) GetKeyUint64(key string) (uint64, error) {
-	value, err := b.GetKey(key)
-	if err != nil {
-		return 0, err
-	}
-	return binary.LittleEndian.Uint64(value), nil
-}
-
-// SetKeyUint64 sets a uint64 value in the memory bucket
-func (b *MemoryBucket) SetKeyUint64(key string, data uint64) error {
-	buffer := make([]byte, 8)
-	binary.LittleEndian.PutUint64(buffer, data)
-
-	return b.SetKey(key, buffer)
 }
 
 // Test the interface

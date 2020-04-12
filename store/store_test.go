@@ -31,7 +31,7 @@ func TestStores(t *testing.T) {
 	// Add bolt store if the database path is set in the environment
 	testPath := os.Getenv("DB_TEST_PATH")
 	if testPath != "" {
-		database := path.Join(testPath, "test.db")
+		database := path.Join(testPath, "store_test.db")
 		boltStore, err := NewBoltStore(database)
 		if err == nil {
 			defer os.Remove(database)

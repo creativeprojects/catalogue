@@ -1,8 +1,6 @@
 package store
 
 import (
-	"encoding/binary"
-
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -61,23 +59,6 @@ func (b *BoltBucket) DeleteKey(key string) error {
 	}
 
 	return b.bucket.Delete([]byte(key))
-}
-
-// GetKeyUint64 returns a uint64 value from the bucket in memory
-func (b *BoltBucket) GetKeyUint64(key string) (uint64, error) {
-	value, err := b.GetKey(key)
-	if err != nil {
-		return 0, err
-	}
-	return binary.LittleEndian.Uint64(value), nil
-}
-
-// SetKeyUint64 sets a uint64 value in the memory bucket
-func (b *BoltBucket) SetKeyUint64(key string, data uint64) error {
-	buffer := make([]byte, 8)
-	binary.LittleEndian.PutUint64(buffer, data)
-
-	return b.SetKey(key, buffer)
 }
 
 // Test the interface
