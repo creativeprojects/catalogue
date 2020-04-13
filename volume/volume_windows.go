@@ -22,3 +22,7 @@ func getDiskSpace(volumePath string, volume *Volume) error {
 	volume.BytesFree = totalNumberOfFreeBytes
 	return nil
 }
+
+func getFilesystemInfo(volumePath string, vol *Volume) error {
+	return nil
+}

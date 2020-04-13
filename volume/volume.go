@@ -21,16 +21,23 @@ type Volume struct {
 	BytesFree       uint64
 	RegularFiles    uint64
 	HiddenFiles     uint64
+	Device          string
 	Path            string
 	ComputerName    string
 	IncludeInSearch bool
 }
 
 func NewVolumeFromPath(volumePath string) (*Volume, error) {
+	var err error
+
 	volume := &Volume{
 		IncludeInSearch: true,
 	}
-	err := getDiskSpace(volumePath, volume)
+	err = getDiskSpace(volumePath, volume)
+	if err != nil {
+		return nil, err
+	}
+	err = getFilesystemInfo(volumePath, volume)
 	if err != nil {
 		return nil, err
 	}
@@ -38,6 +45,10 @@ func NewVolumeFromPath(volumePath string) (*Volume, error) {
 }
 
 func PrintVolume(volume *Volume) {
+	fmt.Printf("       Name: %s\n", volume.Name)
+	fmt.Printf("     Device: %s\n", volume.Device)
+	fmt.Printf("       Path: %s\n", volume.Path)
+	fmt.Printf("     Format: %s\n", volume.Format)
 	fmt.Printf("Total space: %s\n", getBinaryBytes(volume.BytesTotal))
 	fmt.Printf(" Free space: %s\n", getBinaryBytes(volume.BytesFree))
 }

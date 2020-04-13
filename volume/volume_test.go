@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCanGetDiskSpace(t *testing.T) {
+func TestCanGetVolumeInformation(t *testing.T) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
@@ -21,4 +21,8 @@ func TestCanGetDiskSpace(t *testing.T) {
 	assert.NotZero(t, vol.BytesFree)
 	assert.True(t, vol.BytesTotal >= vol.BytesFree, "Total disk space should be greater or equal thant the free space")
 	t.Logf("Total space: %d, Free space: %d", vol.BytesTotal, vol.BytesFree)
+	assert.NotEmpty(t, vol.Format)
+	assert.NotEmpty(t, vol.Device)
+	assert.NotEmpty(t, vol.Path)
+	t.Logf("Device: %s Format: %s Mountpoint: %s", vol.Device, vol.Format, vol.Path)
 }
