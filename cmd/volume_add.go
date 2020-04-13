@@ -7,8 +7,6 @@ import (
 
 	"github.com/creativeprojects/catalogue/volume"
 
-	"golang.org/x/sys/unix"
-
 	"github.com/apex/log"
 	"github.com/spf13/cobra"
 )
@@ -35,12 +33,6 @@ var volumeAddCmd = &cobra.Command{
 			log.WithError(err).Error("Cannot open path specified")
 		}
 		printStat(stat)
-
-		fsStat, err := getVolumeStat(volumePath)
-		if err != nil {
-			log.WithError(err).Error("Error getting fs stat")
-		}
-		fmt.Printf("fsstat: %+v", fsStat)
 
 		vol, err := volume.NewVolumeFromPath(volumePath)
 		if err != nil {
@@ -87,10 +79,4 @@ func getFileTypes(mode os.FileMode) []string {
 		fileTypes = append(fileTypes, "irregular")
 	}
 	return fileTypes
-}
-
-func getVolumeStat(volumePath string) (*unix.Statfs_t, error) {
-	stat := &unix.Statfs_t{}
-	err := unix.Statfs(volumePath, stat)
-	return stat, err
 }

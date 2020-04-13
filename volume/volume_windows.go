@@ -12,7 +12,7 @@ func getDiskSpace(volumePath string, volume *Volume) error {
 	if volume == nil {
 		return errors.New("Null argument volume")
 	}
-	directoryName, _ := windows.UTF16PtrFromString(drivePath)
+	directoryName, _ := windows.UTF16PtrFromString(volumePath)
 	var freeBytesAvailableToCaller, totalNumberOfBytes, totalNumberOfFreeBytes uint64
 	err := windows.GetDiskFreeSpaceEx(directoryName, &freeBytesAvailableToCaller, &totalNumberOfBytes, &totalNumberOfFreeBytes)
 	if err != nil {
