@@ -31,12 +31,14 @@ var volumeAddCmd = &cobra.Command{
 		stat, err := os.Stat(volumePath)
 		if err != nil {
 			log.WithError(err).Error("Cannot open path specified")
+			return
 		}
 		printStat(stat)
 
 		vol, err := volume.NewVolumeFromPath(volumePath)
 		if err != nil {
 			log.WithError(err).Error("Error getting fs stat")
+			return
 		}
 		fmt.Println("")
 		volume.PrintVolume(vol)
