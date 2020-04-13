@@ -5,10 +5,10 @@ type Type uint8
 
 // Volume type
 const (
-	VolumeTypeUnknown Type = iota
-	FixedDrive
-	RemovableDrive
-	NetworkDrive
-	FloppyDisk
-	Optical
+	DriveUnknown Type = iota
+	DriveFixed
+	DriveRemovable
+	DriveNetwork
+	DriveFloppy
+	DriveOptical
 )

@@ -18,12 +18,12 @@ BINARY_WINDOWS=$(BINARY).exe
 TESTS=./...
 COVERAGE_FILE=coverage.out
 
-SOURCES_PATH=creativeprojects/catalogue
+SOURCES_PATH=github.com/creativeprojects/catalogue
 BUILD=build/
 GO_VERSION=1.14
 DOCKER_TAG=creativeprojects/catalogue
 
-.PHONY: all test test-short build build-mac build-linux build-windows build-all coverage clean test-docker build-docker ramdisk
+.PHONY: all test test-short build build-mac build-linux build-windows build-all coverage clean test-docker build-docker ramdisk run-docker
 
 all: test build
 
@@ -66,3 +66,6 @@ ramdisk: /Volumes/RAMDisk
 
 /Volumes/RAMDisk:
 		diskutil erasevolume HFS+ RAMDisk `hdiutil attach -nomount ram://4194304`
+
+run-docker:
+		docker run --rm -v "${GOPATH}":/go -v "${PWD}/.cache":/root/.cache -w /go/src/${SOURCES_PATH} golang:${GO_VERSION} ${GORUN} -v . ${PARAMS}
