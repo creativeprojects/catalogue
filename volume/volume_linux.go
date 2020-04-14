@@ -38,6 +38,9 @@ func getFilesystemInfo(volumePath string, vol *Volume) error {
 		return err
 	}
 
+	// This is kind of hacky (until I find a better way?)
+	// => go through all the mounts and keep the longest path that prefixes the volumePath
+	// It should be the volume where our path sits
 	foundMount, foundDevice, foundFormat, foundLen := "", "", "", 0
 	buffer := bytes.NewBuffer(mounts)
 	for {
