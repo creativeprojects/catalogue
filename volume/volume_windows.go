@@ -43,6 +43,11 @@ func getFilesystemInfo(volumePath string, vol *Volume) error {
 		}
 		rootPath = uint16PtrToString(volumePathName, bufferLength)
 	}
+
+	// Validate rootPah with a trailing \
+	if !strings.HasSuffix(rootPath, `\`) {
+		rootPath += `\`
+	}
 	rootPathName, _ := windows.UTF16PtrFromString(rootPath)
 
 	var volumeNameSize, volumeNameSerialNumber, maximumComponentLength, fileSystemFlags, fileSystemNameSize uint32
@@ -69,7 +74,24 @@ func getFilesystemInfo(volumePath string, vol *Volume) error {
 	vol.Name = uint16PtrToString(volumeNameBuffer, volumeNameSize)
 	vol.Format = uint16PtrToString(fileSystemNameBuffer, fileSystemNameSize)
 	vol.Path = rootPath
+
+	// Get device GUID. It's ok if it's not available
+	vol.Device, _ = getVolumeGUID(rootPath)
+
 	return nil
+}
+
+func getVolumeGUID(mountPoint string) (string, error) {
+	volumeMountPoint, _ := windows.UTF16PtrFromString(mountPoint)
+
+	var bufferLength uint32 = 51
+	volumeName := make([]uint16, bufferLength)
+
+	err := windows.GetVolumeNameForVolumeMountPoint(volumeMountPoint, &volumeName[0], bufferLength)
+	if err != nil {
+		return "", err
+	}
+	return uint16PtrToString(volumeName, bufferLength), nil
 }
 
 func uint16PtrToString(ptr []uint16, size uint32) string {
