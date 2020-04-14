@@ -24,5 +24,6 @@ func TestCanGetVolumeInformation(t *testing.T) {
 	assert.NotEmpty(t, vol.Format, "Format should not be empty")
 	assert.NotEmpty(t, vol.Device, "Device should not be empty")
 	assert.NotEmpty(t, vol.Path, "Path should not be empty")
+	assert.NotEmpty(t, vol.VolumeType.String(), "VolumeType should not be empty")
 	t.Logf("Device: %s Format: %s Mountpoint: %s", vol.Device, vol.Format, vol.Path)
 }

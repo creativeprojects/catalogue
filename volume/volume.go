@@ -25,8 +25,10 @@ type Volume struct {
 	Path            string
 	ComputerName    string
 	IncludeInSearch bool
+	Location        string
 }
 
+// NewVolumeFromPath creates a populates Volume data from volumePath
 func NewVolumeFromPath(volumePath string) (*Volume, error) {
 	var err error
 
@@ -44,9 +46,11 @@ func NewVolumeFromPath(volumePath string) (*Volume, error) {
 	return volume, nil
 }
 
+// PrintVolume prints volume information to the console
 func PrintVolume(volume *Volume) {
 	fmt.Printf("       Name: %s\n", volume.Name)
 	fmt.Printf("     Device: %s\n", volume.Device)
+	fmt.Printf("       Type: %s\n", volume.VolumeType.String())
 	fmt.Printf("       Path: %s\n", volume.Path)
 	fmt.Printf("     Format: %s\n", volume.Format)
 	fmt.Printf("Total space: %s\n", getBinaryBytes(volume.BytesTotal))

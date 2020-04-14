@@ -30,24 +30,11 @@ func getDiskSpace(volumePath string, volume *Volume) error {
 func getFilesystemInfo(volumePath string, vol *Volume) error {
 	var err error
 
-	rootPath := filepath.VolumeName(volumePath)
-	if rootPath == "" {
-		// The path is not rooted, so we need to get the proper root path first
-		fileName, _ := windows.UTF16PtrFromString(volumePath)
-		var bufferLength uint32 = windows.MAX_LONG_PATH + 1
-		volumePathName := make([]uint16, bufferLength)
-
-		err = windows.GetVolumePathName(fileName, &volumePathName[0], bufferLength)
-		if err != nil {
-			return fmt.Errorf("GetVolumePathName: %v", err)
-		}
-		rootPath = uint16PtrToString(volumePathName, bufferLength)
+	rootPath, err := getRootPath(volumePath)
+	if err != nil {
+		return err
 	}
 
-	// Validate rootPah with a trailing \
-	if !strings.HasSuffix(rootPath, `\`) {
-		rootPath += `\`
-	}
 	rootPathName, _ := windows.UTF16PtrFromString(rootPath)
 
 	var volumeNameSize, volumeNameSerialNumber, maximumComponentLength, fileSystemFlags, fileSystemNameSize uint32
@@ -78,7 +65,34 @@ func getFilesystemInfo(volumePath string, vol *Volume) error {
 	// Get device GUID. It's ok if it's not available
 	vol.Device, _ = getVolumeGUID(rootPath)
 
+	vol.VolumeType = getDriveType(rootPath)
+
 	return nil
+}
+
+// getRootPath returns the root of the path: Either "C:\" or "\\Server\Share\"
+func getRootPath(volumePath string) (string, error) {
+	var err error
+
+	rootPath := filepath.VolumeName(volumePath)
+	if rootPath == "" {
+		// The path is not rooted, so we need to get the proper root path first
+		fileName, _ := windows.UTF16PtrFromString(volumePath)
+		var bufferLength uint32 = windows.MAX_LONG_PATH + 1
+		volumePathName := make([]uint16, bufferLength)
+
+		err = windows.GetVolumePathName(fileName, &volumePathName[0], bufferLength)
+		if err != nil {
+			return "", fmt.Errorf("GetVolumePathName: %v", err)
+		}
+		rootPath = uint16PtrToString(volumePathName, bufferLength)
+	}
+
+	// Validate rootPah with a trailing \
+	if !strings.HasSuffix(rootPath, `\`) {
+		rootPath += `\`
+	}
+	return rootPath, nil
 }
 
 func getVolumeGUID(mountPoint string) (string, error) {
@@ -96,4 +110,10 @@ func getVolumeGUID(mountPoint string) (string, error) {
 
 func uint16PtrToString(ptr []uint16, size uint32) string {
 	return strings.TrimRight(string(utf16.Decode(ptr[0:size])), " \r\n\x00")
+}
+
+func getDriveType(rootPath string) Type {
+	rootPathName, _ := windows.UTF16PtrFromString(rootPath)
+	driveType := windows.GetDriveType(rootPathName)
+	return Type(uint8(driveType))
 }
