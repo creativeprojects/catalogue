@@ -49,6 +49,7 @@ func NewVolumeFromPath(volumePath string) (*Volume, error) {
 // PrintVolume prints volume information to the console
 func PrintVolume(volume *Volume) {
 	fmt.Printf("       Name: %s\n", volume.Name)
+	fmt.Printf("         ID: %s\n", volume.VolumeID)
 	fmt.Printf("     Device: %s\n", volume.Device)
 	fmt.Printf("       Type: %s\n", volume.VolumeType.String())
 	fmt.Printf("       Path: %s\n", volume.Path)

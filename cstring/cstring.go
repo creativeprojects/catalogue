@@ -1,5 +1,9 @@
 package cstring
 
+func Int8ToString(value []int8) string {
+	return string(Int8ToBytes(value))
+}
+
 func Int8ToBytes(value []int8) []byte {
 	length := calculateLen(value)
 	output := make([]byte, length)

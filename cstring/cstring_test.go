@@ -23,6 +23,7 @@ func TestCalculateLength(t *testing.T) {
 		assert.Equal(t, item.length, length)
 	}
 }
+
 func TestInt8ToBytes(t *testing.T) {
 	testData := []struct {
 		cstring  []int8
@@ -37,6 +38,24 @@ func TestInt8ToBytes(t *testing.T) {
 	}
 	for _, item := range testData {
 		output := Int8ToBytes(item.cstring)
+		assert.Exactly(t, item.expected, output)
+	}
+}
+
+func TestInt8ToString(t *testing.T) {
+	testData := []struct {
+		cstring  []int8
+		expected string
+	}{
+		{[]int8{}, ""},
+		{[]int8{0}, ""},
+		{[]int8{0, 0, 0}, ""},
+		{[]int8{100, 105, 115, 107}, "disk"},
+		{[]int8{100, 105, 115, 107, 0}, "disk"},
+		{[]int8{100, 105, 115, 107, 0, 0, 0}, "disk"},
+	}
+	for _, item := range testData {
+		output := Int8ToString(item.cstring)
 		assert.Exactly(t, item.expected, output)
 	}
 }
