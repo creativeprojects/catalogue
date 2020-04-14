@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/apex/log"
 	"github.com/creativeprojects/catalogue/constants"
 	"github.com/spf13/cobra"
 )
@@ -19,7 +20,7 @@ var (
 		Short: constants.Description,
 		Long:  `An offline file catalogue with fast search`,
 		Run: func(cmd *cobra.Command, args []string) {
-			// Do Stuff Here
+			log.SetLevel(log.DebugLevel)
 		},
 	}
 

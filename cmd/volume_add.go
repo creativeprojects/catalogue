@@ -20,6 +20,7 @@ var volumeAddCmd = &cobra.Command{
 	Short: "Add a new volume to index",
 	Long:  "Add new volume to index: please specify a path of the volume as an argument",
 	Run: func(cmd *cobra.Command, args []string) {
+		log.SetLevel(log.DebugLevel)
 		if len(args) == 0 {
 			log.Error("Please specify the path of the volume to add")
 			return
@@ -28,12 +29,12 @@ var volumeAddCmd = &cobra.Command{
 		volumePath := args[0]
 		log.WithField("path", volumePath).Info("Analyzing volume...")
 
-		stat, err := os.Stat(volumePath)
+		_, err := os.Stat(volumePath)
 		if err != nil {
 			log.WithError(err).Error("Cannot open path specified")
 			return
 		}
-		printStat(stat)
+		// printStat(stat)
 
 		vol, err := volume.NewVolumeFromPath(volumePath)
 		if err != nil {
