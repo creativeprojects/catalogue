@@ -2,6 +2,7 @@ package volume
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -23,7 +24,7 @@ type Volume struct {
 	HiddenFiles     uint64
 	Device          string
 	Path            string
-	ComputerName    string
+	Hostname        string
 	IncludeInSearch bool
 	Location        string
 }
@@ -33,21 +34,29 @@ func NewVolumeFromPath(volumePath string) (*Volume, error) {
 	var err error
 
 	volume := &Volume{
+		Created:         time.Now(),
 		IncludeInSearch: true,
 	}
+	hostname, err := os.Hostname()
+	volume.Hostname = hostname
+
 	err = getDiskSpace(volumePath, volume)
 	if err != nil {
 		return nil, err
 	}
+
 	err = getFilesystemInfo(volumePath, volume)
 	if err != nil {
 		return nil, err
 	}
+
 	return volume, nil
 }
 
 // PrintVolume prints volume information to the console
 func PrintVolume(volume *Volume) {
+	fmt.Printf("   Hostname: %s\n", volume.Hostname)
+	fmt.Printf("    Created: %s\n", volume.Created)
 	fmt.Printf("       Name: %s\n", volume.Name)
 	fmt.Printf("         ID: %s\n", volume.VolumeID)
 	fmt.Printf("     Device: %s\n", volume.Device)
