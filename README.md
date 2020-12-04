@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/creativeprojects/catalogue.svg?branch=master)](https://travis-ci.com/creativeprojects/catalogue)
+[![Build](https://github.com/creativeprojects/catalogue/workflows/Build/badge.svg)](https://github.com/creativeprojects/catalogue/actions)
 
 # Catalogue
 
