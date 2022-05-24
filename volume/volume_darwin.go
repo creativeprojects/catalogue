@@ -1,3 +1,4 @@
+//go:build darwin
 // +build darwin
 
 package volume
@@ -9,8 +10,6 @@ import (
 	"os/exec"
 	"path"
 	"strings"
-
-	"github.com/creativeprojects/catalogue/cstring"
 
 	"golang.org/x/sys/unix"
 	"howett.net/plist"
@@ -52,9 +51,9 @@ func getFilesystemInfo(volumePath string, vol *Volume) error {
 	if err != nil {
 		return err
 	}
-	vol.Format = cstring.Int8ToString(stat.Fstypename[:])
-	vol.Path = cstring.Int8ToString(stat.Mntonname[:])
-	vol.Device = cstring.Int8ToString(stat.Mntfromname[:])
+	vol.Format = string(stat.Fstypename[:])
+	vol.Path = string(stat.Mntonname[:])
+	vol.Device = string(stat.Mntfromname[:])
 
 	// If vol.Device starts with // it means it's a network drive
 	if strings.HasPrefix(vol.Device, "//") {

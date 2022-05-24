@@ -1,24 +1,30 @@
 module github.com/creativeprojects/catalogue
 
-go 1.13
+go 1.18
 
 require (
-	github.com/apex/log v1.1.2
-	github.com/fsnotify/fsnotify v1.4.9 // indirect
-	github.com/google/uuid v1.1.1
-	github.com/mitchellh/mapstructure v1.2.2 // indirect
-	github.com/pelletier/go-toml v1.7.0 // indirect
-	github.com/spf13/afero v1.2.2
-	github.com/spf13/cast v1.3.1 // indirect
-	github.com/spf13/cobra v0.0.7
-	github.com/spf13/jwalterweatherman v1.1.0 // indirect
+	github.com/apex/log v1.9.0
+	github.com/google/uuid v1.3.0
+	github.com/spf13/afero v1.8.2
+	github.com/spf13/cobra v1.4.0
+	github.com/stretchr/testify v1.7.1
+	go.etcd.io/bbolt v1.3.6
+	golang.org/x/crypto v0.0.0-20220518034528-6f7dac969898
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a
+	howett.net/plist v1.0.0
+)
+
+require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/fatih/color v1.13.0 // indirect
+	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.6.3 // indirect
-	github.com/stretchr/testify v1.3.0
-	go.etcd.io/bbolt v1.3.4
-	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734
-	golang.org/x/sys v0.0.0-20200409092240-59c9f1ba88fa
-	golang.org/x/text v0.3.2 // indirect
-	gopkg.in/ini.v1 v1.55.0 // indirect
-	howett.net/plist v0.0.0-20200225050739-77e249a2e2ba
+	github.com/stretchr/objx v0.1.0 // indirect
+	golang.org/x/term v0.0.0-20220411215600-e5f449aeb171 // indirect
+	golang.org/x/text v0.3.7 // indirect
+	gopkg.in/yaml.v3 v3.0.0 // indirect
 )
