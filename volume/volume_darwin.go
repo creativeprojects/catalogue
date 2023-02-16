@@ -51,9 +51,9 @@ func getFilesystemInfo(volumePath string, vol *Volume) error {
 	if err != nil {
 		return err
 	}
-	vol.Format = string(stat.Fstypename[:])
-	vol.Path = string(stat.Mntonname[:])
-	vol.Device = string(stat.Mntfromname[:])
+	vol.Format = ByteArrayToString(stat.Fstypename[:])
+	vol.Path = ByteArrayToString(stat.Mntonname[:])
+	vol.Device = ByteArrayToString(stat.Mntfromname[:])
 
 	// If vol.Device starts with // it means it's a network drive
 	if strings.HasPrefix(vol.Device, "//") {
@@ -65,7 +65,7 @@ func getFilesystemInfo(volumePath string, vol *Volume) error {
 	// Fill in more information from diskutil tool
 	err = getDriveInfo(vol.Device, vol)
 	if err != nil {
-		return fmt.Errorf("getDriveInfo: %w", err)
+		return fmt.Errorf("getDriveInfo %q: %w", vol.Device, err)
 	}
 
 	return nil
@@ -107,4 +107,9 @@ func getDriveInfo(partition string, vol *Volume) error {
 	// Debug
 	fmt.Printf("\n%+v\n", data)
 	return nil
+}
+
+func ByteArrayToString(byteArray []byte) string {
+	n := bytes.Index(byteArray, []byte{0})
+	return string(byteArray[:n])
 }

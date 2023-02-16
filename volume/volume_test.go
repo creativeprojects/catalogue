@@ -14,9 +14,8 @@ func TestCanGetVolumeInformation(t *testing.T) {
 
 	t.Logf("Current working directory: %s", cwd)
 	vol, err := NewVolumeFromPath(cwd)
-	if err != nil {
-		t.Skip(err)
-	}
+	require.NoError(t, err)
+
 	assert.NotZero(t, vol.BytesTotal)
 	assert.NotZero(t, vol.BytesFree)
 	assert.GreaterOrEqual(t, vol.BytesTotal, vol.BytesFree)
