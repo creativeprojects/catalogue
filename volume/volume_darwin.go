@@ -65,7 +65,7 @@ func getFilesystemInfo(volumePath string, vol *Volume) error {
 	// Fill in more information from diskutil tool
 	err = getDriveInfo(vol.Device, vol)
 	if err != nil {
-		return err
+		return fmt.Errorf("getDriveInfo: %w", err)
 	}
 
 	return nil

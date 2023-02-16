@@ -38,16 +38,19 @@ func NewVolumeFromPath(volumePath string) (*Volume, error) {
 		IncludeInSearch: true,
 	}
 	hostname, err := os.Hostname()
+	if err != nil {
+		return nil, fmt.Errorf("os.Hostname: %w", err)
+	}
 	volume.Hostname = hostname
 
 	err = getDiskSpace(volumePath, volume)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getDiskSpace: %w", err)
 	}
 
 	err = getFilesystemInfo(volumePath, volume)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getFilesystemInfo: %w", err)
 	}
 
 	return volume, nil
