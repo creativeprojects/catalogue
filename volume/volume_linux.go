@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package volume
@@ -12,7 +13,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/apex/log"
+	"github.com/pterm/pterm"
 	"golang.org/x/sys/unix"
 )
 
@@ -66,7 +67,7 @@ func getFilesystemInfo(volumePath string, vol *Volume) error {
 	if partition == "" {
 		return fmt.Errorf("Cannot find device %d:%d in /dev", major, minor)
 	}
-	log.WithFields(log.Fields{"major": major, "minor": minor, "name": partition}).Debug("File is on device")
+	pterm.Debug.Printf("File is on device %d:%d (%s)\n", major, minor, partition)
 
 	vol.Device = "/dev/" + partition
 	vol.Path, vol.Format = getDriveMount(vol.Device)
@@ -131,7 +132,7 @@ func getDriveInfo(partition string, vol *Volume) error {
 	}
 
 	if diskID != "" {
-		log.WithField("id", diskID).Debug("Found partition from disk")
+		pterm.Debug.Printf("Found partition from disk %q\n", diskID)
 	}
 
 	return nil

@@ -7,10 +7,8 @@ import (
 
 	"github.com/creativeprojects/catalogue/index"
 	"github.com/creativeprojects/catalogue/termstatus"
-
 	"github.com/creativeprojects/catalogue/volume"
-
-	"github.com/apex/log"
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
 
@@ -23,28 +21,25 @@ var volumeAddCmd = &cobra.Command{
 	Short: "Add a new volume to index",
 	Long:  "Add new volume to index: please specify a path of the volume as an argument",
 	Run: func(cmd *cobra.Command, args []string) {
-		log.SetLevel(log.DebugLevel)
 		if len(args) == 0 {
-			log.Error("Please specify the path of the volume to add")
+			pterm.Error.Println("Please specify the path of the volume to add")
 			return
 		}
 
 		volumePath := args[0]
-		log.WithField("path", volumePath).Info("Analyzing volume...")
+		pterm.Info.Printfln("Analyzing volume %q...", volumePath)
 
 		_, err := os.Stat(volumePath)
 		if err != nil {
-			log.WithError(err).Error("Cannot open path specified")
+			pterm.Error.Println("Cannot open path specified:", err)
 			return
 		}
-		// printStat(stat)
 
 		vol, err := volume.NewVolumeFromPath(volumePath)
 		if err != nil {
-			log.WithError(err).Error("Error getting fs stat")
+			pterm.Error.Println("Cannot get volume information:", err)
 			return
 		}
-		fmt.Println("")
 		volume.PrintVolume(vol)
 
 		term := termstatus.New(os.Stdout, os.Stderr, false)

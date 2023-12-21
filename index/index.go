@@ -1,6 +1,7 @@
 package index
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -29,6 +30,10 @@ func (i *Indexer) Run() {
 	err := afero.Walk(i.fs, i.rootPath,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
+				if errors.Is(err, os.ErrPermission) {
+					fmt.Println("Permission denied:", path)
+					return nil
+				}
 				return err
 			}
 			fmt.Println(path, info.Size())

@@ -4,7 +4,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/apex/log"
+	"github.com/pterm/pterm"
 )
 
 // IsProcessBackground reports whether the current process is running in the background.
@@ -13,7 +13,7 @@ func IsProcessBackground() bool {
 	_, _, err := syscall.Syscall(syscall.SYS_IOCTL, uintptr(syscall.Stdin), syscall.TIOCGPGRP, uintptr(unsafe.Pointer(&pid)))
 
 	if err != 0 {
-		log.WithError(err).Debug("Can't check if we are in the background. Using default behaviour.")
+		pterm.Debug.Println("Can't check if we are in the background. Using default behaviour.")
 		return false
 	}
 

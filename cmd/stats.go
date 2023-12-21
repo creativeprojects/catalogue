@@ -6,8 +6,8 @@ import (
 
 	"github.com/creativeprojects/catalogue/database"
 	"github.com/creativeprojects/catalogue/store"
+	"github.com/pterm/pterm"
 
-	"github.com/apex/log"
 	"github.com/spf13/cobra"
 )
 
@@ -22,13 +22,13 @@ var statsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if _, err := os.Stat(rootFlags.Database); os.IsNotExist(err) {
-			log.WithField("file", rootFlags.Database).Error("Database not found")
+			pterm.Error.Printf("Database %q not found\n", rootFlags.Database)
 			return
 		}
 
 		store, err := store.NewBoltStore(rootFlags.Database)
 		if err != nil {
-			log.WithError(err).Error("Cannot open database")
+			pterm.Error.Printf("Cannot open database: %v\n", err)
 			return
 		}
 		defer store.Close()

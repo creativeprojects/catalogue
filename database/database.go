@@ -4,9 +4,8 @@ import (
 	"encoding/binary"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/creativeprojects/catalogue/store"
+	"github.com/google/uuid"
 )
 
 const (
