@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/creativeprojects/catalogue/termstatus"
 	"github.com/spf13/afero"
 )
 
@@ -15,11 +14,11 @@ type Indexer struct {
 	rootPath string
 }
 
-func NewIndexer(rootPath string, term *termstatus.Terminal) *Indexer {
-	return NewFsIndexer(rootPath, term, afero.NewOsFs())
+func NewIndexer(rootPath string) *Indexer {
+	return NewFsIndexer(rootPath, afero.NewOsFs())
 }
 
-func NewFsIndexer(rootPath string, term *termstatus.Terminal, fs afero.Fs) *Indexer {
+func NewFsIndexer(rootPath string, fs afero.Fs) *Indexer {
 	return &Indexer{
 		fs:       fs,
 		rootPath: rootPath,

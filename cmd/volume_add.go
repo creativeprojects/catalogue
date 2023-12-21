@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/creativeprojects/catalogue/index"
-	"github.com/creativeprojects/catalogue/termstatus"
 	"github.com/creativeprojects/catalogue/volume"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
@@ -42,8 +41,7 @@ var volumeAddCmd = &cobra.Command{
 		}
 		volume.PrintVolume(vol)
 
-		term := termstatus.New(os.Stdout, os.Stderr, false)
-		indexer := index.NewIndexer(volumePath, term)
+		indexer := index.NewIndexer(volumePath)
 		indexer.Run()
 	},
 }
