@@ -21,11 +21,11 @@ func (t Type) String() string {
 	case DriveRemovable:
 		return "Removable (Floppy, USB drive, Flash card reader)"
 	case DriveFixed:
-		return "Fixed (Hard drive, SSD)"
+		return "Internal drive"
 	case DriveNetwork:
 		return "Remote (network) drive"
 	case DriveOptical:
-		return "Optical (CD-ROM)"
+		return "Optical drive"
 	case DriveRAM:
 		return "RAM disk"
 	case DriveLoopback:

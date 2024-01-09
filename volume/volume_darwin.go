@@ -102,6 +102,8 @@ func getDriveInfo(partition string, vol *Volume) error {
 		}
 	} else if data.Internal {
 		vol.VolumeType = DriveFixed
+	} else if data.Ejectable {
+		vol.VolumeType = DriveRemovable
 	}
 
 	// Debug

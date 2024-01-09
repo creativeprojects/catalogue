@@ -41,8 +41,9 @@ var volumeAddCmd = &cobra.Command{
 		}
 		volume.PrintVolume(vol)
 
+		progresser := index.NewProgress(&pterm.DefaultSpinner)
 		indexer := index.NewIndexer(volumePath)
-		indexer.Run()
+		indexer.Run(progresser)
 	},
 }
 
