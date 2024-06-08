@@ -1,9 +1,7 @@
 package store
 
 import (
-	"math/rand"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -11,10 +9,6 @@ import (
 type testBucketData struct {
 	name   string
 	bucket Bucket
-}
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
 }
 
 func getBuckets() []testBucketData {
@@ -25,6 +19,8 @@ func getBuckets() []testBucketData {
 }
 
 func TestLoadingUnknownKeyFromBucket(t *testing.T) {
+	t.Parallel()
+
 	for _, data := range getBuckets() {
 		t.Run(data.name, func(t *testing.T) {
 			_, err := data.bucket.GetKey("some-key")
@@ -34,8 +30,12 @@ func TestLoadingUnknownKeyFromBucket(t *testing.T) {
 }
 
 func TestSetKeyAndGetKeyFromBucket(t *testing.T) {
+	t.Parallel()
+
 	for _, data := range getBuckets() {
 		t.Run(data.name, func(t *testing.T) {
+			t.Parallel()
+
 			var err error
 			var value1, value2 []byte
 

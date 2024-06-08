@@ -1,50 +1,58 @@
 package index
 
 import (
+	"fmt"
 	"os"
-	"strings"
 
+	"github.com/creativeprojects/catalogue/ui"
 	"github.com/pterm/pterm"
 )
 
 type Progresser interface {
-	Increment(path string, info os.FileInfo, fileCount, dirCount int)
+	Start()
+	Increment(path string, info os.FileInfo)
 	Error(path string, err error)
 	Success(message string)
 }
 
 type Progress struct {
-	spinner *pterm.SpinnerPrinter
+	spinner    *ui.SpinnerPrinter
+	fileCount  int
+	dirCount   int
+	errorCount int
 }
 
-func NewProgress(spinner *pterm.SpinnerPrinter) *Progress {
-	if spinner == nil {
-		spinner = &pterm.DefaultSpinner
-	}
-	spinner.Start()
+func NewProgress() *Progress {
 	return &Progress{
-		spinner: spinner,
+		spinner: ui.DefaultSpinner,
 	}
 }
 
-func (p *Progress) Increment(path string, info os.FileInfo, fileCount, dirCount int) {
-	maxWidth := pterm.GetTerminalWidth() - 5
-	display := path
-	if len(display) > maxWidth {
-		display = display[len(display)-maxWidth:]
+func (p *Progress) Start() {
+	p.spinner.Start()
+}
+
+func (p *Progress) Increment(path string, info os.FileInfo) {
+	if info.IsDir() {
+		p.dirCount++
+	} else {
+		p.fileCount++
 	}
-	if len(display) < maxWidth { // pad with spaces
-		display = display + strings.Repeat(" ", maxWidth-len(display))
-	}
-	p.spinner.Text = display
-	p.spinner.WithText(display)
+	p.update()
 }
 
 func (p *Progress) Error(path string, err error) {
-	p.spinner.FailPrinter.Printf("%s: %s\n", path, err)
+	pterm.Error.Println("\r", err)
+	p.errorCount++
+	p.update()
 }
 
 func (p *Progress) Success(message string) {
-	p.spinner.Success(message)
-	_ = p.spinner.Stop()
+	p.spinner.Stop()
+	pterm.Success.Println(message)
+}
+
+func (p *Progress) update() {
+	text := fmt.Sprintf("Files: %d, Directories: %d, Errors: %d", p.fileCount, p.dirCount, p.errorCount)
+	p.spinner.UpdateText(text)
 }

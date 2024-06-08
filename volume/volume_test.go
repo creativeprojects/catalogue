@@ -9,6 +9,8 @@ import (
 )
 
 func TestCanGetVolumeInformation(t *testing.T) {
+	t.Parallel()
+
 	cwd, err := os.Getwd()
 	require.NoError(t, err)
 

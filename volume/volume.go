@@ -27,6 +27,7 @@ type Volume struct {
 	Hostname        string
 	IncludeInSearch bool
 	Location        string
+	Connection      string
 }
 
 // NewVolumeFromPath creates a populates Volume data from volumePath
@@ -61,6 +62,7 @@ func PrintVolume(volume *Volume) {
 	fmt.Printf("   Hostname: %s\n", volume.Hostname)
 	fmt.Printf("    Created: %s\n", volume.Created)
 	fmt.Printf("       Name: %s\n", volume.Name)
+	fmt.Printf(" Connection: %s\n", volume.Connection)
 	fmt.Printf("         ID: %s\n", volume.VolumeID)
 	fmt.Printf("     Device: %s\n", volume.Device)
 	fmt.Printf("       Type: %s\n", volume.VolumeType.String())

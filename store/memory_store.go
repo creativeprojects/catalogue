@@ -25,11 +25,11 @@ func NewMemoryStore() *MemoryStore {
 }
 
 // Begin a transaction
-func (s *MemoryStore) Begin(writable bool) (Transaction, error) {
-	return s.begin(writable)
+func (s *MemoryStore) Begin(writeable bool) (Transaction, error) {
+	return s.begin(writeable)
 }
 
-func (s *MemoryStore) begin(writable bool) (*MemoryTransaction, error) {
+func (s *MemoryStore) begin(writeable bool) (*MemoryTransaction, error) {
 	s.transactionsMutex.Lock()
 	defer s.transactionsMutex.Unlock()
 
@@ -48,8 +48,8 @@ func (s *MemoryStore) begin(writable bool) (*MemoryTransaction, error) {
 		remove()
 	}
 
-	if writable {
-		// Have a full lock on writable buckets
+	if writeable {
+		// Have a full lock on writeable buckets
 		s.writeMutex.Lock()
 
 		// Unlock at the end
@@ -59,7 +59,7 @@ func (s *MemoryStore) begin(writable bool) (*MemoryTransaction, error) {
 		}
 	}
 
-	tx := newMemoryTransaction(s, writable, close)
+	tx := newMemoryTransaction(s, writeable, close)
 	s.transactions[transactionID] = tx
 	return tx, nil
 }

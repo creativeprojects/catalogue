@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/creativeprojects/catalogue/index"
 	"github.com/creativeprojects/catalogue/volume"
@@ -40,10 +42,30 @@ var volumeAddCmd = &cobra.Command{
 			return
 		}
 		volume.PrintVolume(vol)
+		fmt.Println("")
 
-		progresser := index.NewProgress(&pterm.DefaultSpinner)
-		indexer := index.NewIndexer(volumePath)
-		indexer.Run(progresser)
+		wg := new(sync.WaitGroup)
+		fileIndexedChannel := make(chan index.FileIndexed, 1000)
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			start := time.Now()
+			progresser := index.NewProgress()
+			progresser.Start()
+
+			for fileIndexed := range fileIndexedChannel {
+				if fileIndexed.Error != nil {
+					progresser.Error(fileIndexed.Path, fileIndexed.Error)
+					continue
+				}
+				progresser.Increment(fileIndexed.Path, fileIndexed.Info)
+			}
+			progresser.Success("Indexing complete in " + time.Since(start).String())
+		}()
+		indexer := index.NewIndexer(volumePath, fileIndexedChannel)
+		indexer.Run()
+		close(fileIndexedChannel)
+		wg.Wait()
 	},
 }
 

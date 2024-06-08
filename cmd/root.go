@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/creativeprojects/catalogue/constants"
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +20,9 @@ var (
 		Short: constants.Description,
 		Long:  `An offline file catalogue with fast search`,
 		Run: func(cmd *cobra.Command, args []string) {
-			// set log level here
+			if rootFlags.Verbose {
+				pterm.EnableDebugMessages()
+			}
 		},
 	}
 

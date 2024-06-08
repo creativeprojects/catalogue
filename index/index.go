@@ -4,55 +4,60 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pterm/pterm"
 	"github.com/spf13/afero"
 )
 
+type FileIndexed struct {
+	Path  string
+	Info  os.FileInfo
+	Error error
+}
+
 type Indexer struct {
-	fs          afero.Fs
-	rootPath    string
-	progressBar *pterm.ProgressbarPrinter
+	fs                 afero.Fs
+	rootPath           string
+	fileIndexedChannel chan<- FileIndexed
 }
 
-func NewIndexer(rootPath string) *Indexer {
-	return NewFsIndexer(rootPath, afero.NewOsFs())
+func NewIndexer(rootPath string, fileIndexedChannel chan<- FileIndexed) *Indexer {
+	return NewFsIndexer(rootPath, fileIndexedChannel, afero.NewOsFs())
 }
 
-func NewFsIndexer(rootPath string, fs afero.Fs) *Indexer {
-	pbar, _ := pterm.DefaultProgressbar.WithShowElapsedTime().WithShowCount().WithShowTitle().Start()
+func NewFsIndexer(rootPath string, fileIndexedChannel chan<- FileIndexed, fs afero.Fs) *Indexer {
 	return &Indexer{
-		fs:          fs,
-		rootPath:    rootPath,
-		progressBar: pbar,
+		fs:                 fs,
+		rootPath:           rootPath,
+		fileIndexedChannel: fileIndexedChannel,
 	}
 }
 
-func (i *Indexer) Run(progresser Progresser) {
+// Run starts the indexing process. It will walk the filesystem and send the results to the fileIndexedChannel.
+// The Run method will return after all files have been indexed.
+func (i *Indexer) Run() {
 	_ = i.walk(i.rootPath)
 }
 
 func (i *Indexer) walk(path string) error {
 	file, err := i.fs.Open(path)
 	if err != nil {
-		pterm.Error.Printf("%s: %s\n", path, err)
+		i.fileIndexedChannel <- FileIndexed{Path: path, Error: err}
 		return err
 	}
 	names, err := file.Readdirnames(-1)
 	file.Close()
 	if err != nil {
-		pterm.Error.Printf("%s: %s\n", path, err)
+		i.fileIndexedChannel <- FileIndexed{Path: path, Error: err}
 		return err
 	}
-	i.progressBar.Total += len(names)
 
 	for _, name := range names {
-		i.progressBar.Increment()
 		filename := filepath.Join(path, name)
 		fileInfo, err := lstatIfPossible(i.fs, filename)
 		if err != nil {
-			pterm.Error.Printf("%s: %s\n", filename, err)
+			i.fileIndexedChannel <- FileIndexed{Path: filename, Error: err}
 			continue
 		}
+		i.fileIndexedChannel <- FileIndexed{Path: filename, Info: fileInfo}
 		if fileInfo.IsDir() {
 			_ = i.walk(filename)
 		}

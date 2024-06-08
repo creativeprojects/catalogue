@@ -94,6 +94,7 @@ func getDriveInfo(partition string, vol *Volume) error {
 
 	vol.Name = data.VolumeName
 	vol.VolumeID = data.VolumeUUID
+	vol.Connection = data.BusProtocol
 
 	if data.Removable {
 		vol.VolumeType = DriveRemovable
@@ -106,8 +107,6 @@ func getDriveInfo(partition string, vol *Volume) error {
 		vol.VolumeType = DriveRemovable
 	}
 
-	// Debug
-	fmt.Printf("\n%+v\n", data)
 	return nil
 }
 

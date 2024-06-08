@@ -1,15 +1,15 @@
 module github.com/creativeprojects/catalogue
 
-go 1.21
+go 1.22
 
 require (
-	github.com/google/uuid v1.4.0
-	github.com/pterm/pterm v0.12.72
+	github.com/google/uuid v1.6.0
+	github.com/pterm/pterm v0.12.79
 	github.com/spf13/afero v1.11.0
 	github.com/spf13/cobra v1.8.0
-	github.com/stretchr/testify v1.8.4
-	go.etcd.io/bbolt v1.3.8
-	golang.org/x/sys v0.15.0
+	github.com/stretchr/testify v1.9.0
+	go.etcd.io/bbolt v1.3.10
+	golang.org/x/sys v0.21.0
 	howett.net/plist v1.0.1
 )
 
@@ -28,7 +28,7 @@ require (
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
-	golang.org/x/term v0.15.0 // indirect
+	golang.org/x/term v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
