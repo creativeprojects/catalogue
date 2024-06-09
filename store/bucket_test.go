@@ -23,7 +23,7 @@ func TestLoadingUnknownKeyFromBucket(t *testing.T) {
 
 	for _, data := range getBuckets() {
 		t.Run(data.name, func(t *testing.T) {
-			_, err := data.bucket.GetKey("some-key")
+			_, err := data.bucket.Get("some-key")
 			assert.Equal(t, ErrKeyNotFound, err)
 		})
 	}
@@ -40,12 +40,12 @@ func TestSetKeyAndGetKeyFromBucket(t *testing.T) {
 			var value1, value2 []byte
 
 			value1 = []byte("test data")
-			err = data.bucket.SetKey("test-key", value1)
+			err = data.bucket.Put("test-key", value1)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			value2, err = data.bucket.GetKey("test-key")
+			value2, err = data.bucket.Get("test-key")
 			if err != nil {
 				t.Fatal(err)
 			}

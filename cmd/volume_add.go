@@ -51,12 +51,13 @@ var volumeAddCmd = &cobra.Command{
 
 		wg := new(sync.WaitGroup)
 		fileIndexedChannel := make(chan index.FileIndexed, 1000)
+		start := time.Now()
+		progresser := index.NewProgress()
+		progresser.Start()
+
 		wg.Add(1)
-		go func() {
+		go func(progresser index.Progresser) {
 			defer wg.Done()
-			start := time.Now()
-			progresser := index.NewProgress()
-			progresser.Start()
 
 			for fileIndexed := range fileIndexedChannel {
 				if fileIndexed.Error != nil {
@@ -65,11 +66,17 @@ var volumeAddCmd = &cobra.Command{
 				}
 				progresser.Increment(fileIndexed.Path, fileIndexed.Info)
 			}
-			progresser.Stop("Indexing complete in " + time.Since(start).String())
-		}()
-		indexer := index.NewIndexer(volumePath, fileIndexedChannel)
-		indexer.Run(ctx)
+		}(progresser)
+		indexer := index.NewIndexer(volumePath, vol.DeviceID, fileIndexedChannel)
+		err = indexer.Run(ctx)
 		close(fileIndexedChannel)
+		if err != nil {
+			progresser.Stop("")
+			pterm.Error.Println(err)
+		} else {
+			fileCount, _, _ := progresser.Stats()
+			progresser.Stop(fmt.Sprintf("Indexed %d files in %s", fileCount, time.Since(start).String()))
+		}
 		wg.Wait()
 	},
 }

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/creativeprojects/catalogue/platform"
 	"github.com/spf13/afero"
 )
 
@@ -17,17 +18,19 @@ type FileIndexed struct {
 type Indexer struct {
 	fs                 afero.Fs
 	rootPath           string
+	deviceID           uint64
 	fileIndexedChannel chan<- FileIndexed
 }
 
-func NewIndexer(rootPath string, fileIndexedChannel chan<- FileIndexed) *Indexer {
-	return NewFsIndexer(rootPath, fileIndexedChannel, afero.NewOsFs())
+func NewIndexer(rootPath string, deviceID uint64, fileIndexedChannel chan<- FileIndexed) *Indexer {
+	return NewFsIndexer(rootPath, deviceID, fileIndexedChannel, afero.NewOsFs())
 }
 
-func NewFsIndexer(rootPath string, fileIndexedChannel chan<- FileIndexed, fs afero.Fs) *Indexer {
+func NewFsIndexer(rootPath string, deviceID uint64, fileIndexedChannel chan<- FileIndexed, fs afero.Fs) *Indexer {
 	return &Indexer{
 		fs:                 fs,
 		rootPath:           rootPath,
+		deviceID:           deviceID,
 		fileIndexedChannel: fileIndexedChannel,
 	}
 }
@@ -59,6 +62,9 @@ func (i *Indexer) walk(ctx context.Context, path string) error {
 		fileInfo, err := lstatIfPossible(i.fs, filename)
 		if err != nil {
 			i.fileIndexedChannel <- FileIndexed{Path: filename, Error: err}
+			continue
+		}
+		if !platform.IsWindows() && platform.DeviceID(fileInfo) != i.deviceID {
 			continue
 		}
 		i.fileIndexedChannel <- FileIndexed{Path: filename, Info: fileInfo}

@@ -13,6 +13,7 @@ type Progresser interface {
 	Increment(path string, info os.FileInfo)
 	Error(path string, err error)
 	Stop(message string)
+	Stats() (fileCount, dirCount, errorCount int)
 }
 
 type Progress struct {
@@ -52,7 +53,13 @@ func (p *Progress) Error(path string, err error) {
 
 func (p *Progress) Stop(message string) {
 	p.spinner.Stop()
-	pterm.Success.Println(message)
+	if len(message) > 0 {
+		pterm.Success.Println(message)
+	}
+}
+
+func (p *Progress) Stats() (fileCount, dirCount, errorCount int) {
+	return p.fileCount, p.dirCount, p.errorCount
 }
 
 func (p *Progress) update() {

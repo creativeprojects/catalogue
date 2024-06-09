@@ -63,18 +63,18 @@ func (d *Database) Init() {
 		}
 		if ID, err := uuid.NewRandom(); err == nil {
 			if bID, err := ID.MarshalBinary(); err == nil {
-				stats.SetKey(KeyDatabaseID, bID)
+				stats.Put(KeyDatabaseID, bID)
 			}
 		}
-		stats.SetKey(KeyVersion, versionToBytes(CurrentVersion))
-		stats.SetKey(KeyTotalVolumes, uint64ToBytes(0))
-		stats.SetKey(KeyTotalDirectories, uint64ToBytes(0))
-		stats.SetKey(KeyTotalFiles, uint64ToBytes(0))
+		stats.Put(KeyVersion, versionToBytes(CurrentVersion))
+		stats.Put(KeyTotalVolumes, uint64ToBytes(0))
+		stats.Put(KeyTotalDirectories, uint64ToBytes(0))
+		stats.Put(KeyTotalFiles, uint64ToBytes(0))
 
 		now := time.Now()
 		if bNow, err := now.MarshalBinary(); err == nil {
-			stats.SetKey(KeyCreated, bNow)
-			stats.SetKey(KeyLastSaved, bNow)
+			stats.Put(KeyCreated, bNow)
+			stats.Put(KeyLastSaved, bNow)
 		}
 		return nil
 	})
@@ -87,15 +87,15 @@ func (d *Database) Stats() Stats {
 		if err != nil {
 			return err
 		}
-		stats.DatabaseID = bytesToUUID(bucket.GetKey(KeyDatabaseID))
-		stats.Version = bytesToVersion(bucket.GetKey(KeyVersion))
+		stats.DatabaseID = bytesToUUID(bucket.Get(KeyDatabaseID))
+		stats.Version = bytesToVersion(bucket.Get(KeyVersion))
 
-		stats.TotalVolumes = bytesToUint64(bucket.GetKey(KeyTotalVolumes))
-		stats.TotalDirectories = bytesToUint64(bucket.GetKey(KeyTotalDirectories))
-		stats.TotalFiles = bytesToUint64(bucket.GetKey(KeyTotalFiles))
+		stats.TotalVolumes = bytesToUint64(bucket.Get(KeyTotalVolumes))
+		stats.TotalDirectories = bytesToUint64(bucket.Get(KeyTotalDirectories))
+		stats.TotalFiles = bytesToUint64(bucket.Get(KeyTotalFiles))
 
-		stats.Created = bytesToTime(bucket.GetKey(KeyCreated))
-		stats.LastSaved = bytesToTime(bucket.GetKey(KeyLastSaved))
+		stats.Created = bytesToTime(bucket.Get(KeyCreated))
+		stats.LastSaved = bytesToTime(bucket.Get(KeyLastSaved))
 
 		return nil
 	})

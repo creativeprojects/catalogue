@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/creativeprojects/catalogue/database"
 	"github.com/creativeprojects/catalogue/store"
@@ -36,11 +37,11 @@ var statsCmd = &cobra.Command{
 		db := database.NewDatabase(store)
 		stats := db.Stats()
 		fmt.Println("")
-		fmt.Printf("          Database:  %s\n", rootFlags.Database)
+		fmt.Printf("     Database file:  %s\n", rootFlags.Database)
 		fmt.Printf("                ID:  %s\n", stats.DatabaseID.String())
 		fmt.Printf("           Version:  %d.%d\n", stats.Version.Major, stats.Version.Minor)
-		fmt.Printf("           Created:  %s\n", stats.Created)
-		fmt.Printf("        Last saved:  %s\n", stats.LastSaved)
+		fmt.Printf("           Created:  %s\n", stats.Created.Format(time.DateTime))
+		fmt.Printf("        Last saved:  %s\n", stats.LastSaved.Format(time.DateTime))
 		fmt.Printf("     Total volumes:  %d\n", stats.TotalVolumes)
 		fmt.Printf(" Total directories:  %d\n", stats.TotalDirectories)
 		fmt.Printf("       Total files:  %d\n", stats.TotalFiles)

@@ -1,6 +1,7 @@
 package store
 
 import (
+	"errors"
 	"sync"
 )
 
@@ -24,8 +25,8 @@ func newMemoryBucket(keys map[string][]byte, writable bool) *MemoryBucket {
 	}
 }
 
-// GetKey returns a key from the bucket in memory
-func (b *MemoryBucket) GetKey(key string) ([]byte, error) {
+// Get returns a key from the bucket in memory
+func (b *MemoryBucket) Get(key string) ([]byte, error) {
 	if b == nil {
 		return nil, ErrNullPointerBucket
 	}
@@ -59,8 +60,8 @@ func (b *MemoryBucket) GetKey(key string) ([]byte, error) {
 	return nil, ErrKeyNotFound
 }
 
-// SetKey sets a key in the memory bucket
-func (b *MemoryBucket) SetKey(key string, data []byte) error {
+// Put sets a key in the memory bucket
+func (b *MemoryBucket) Put(key string, data []byte) error {
 	if b == nil {
 		return ErrNullPointerBucket
 	}
@@ -82,8 +83,8 @@ func (b *MemoryBucket) SetKey(key string, data []byte) error {
 	return nil
 }
 
-// DeleteKey deletes a key from the memory bucket
-func (b *MemoryBucket) DeleteKey(key string) error {
+// Delete deletes a key from the memory bucket
+func (b *MemoryBucket) Delete(key string) error {
 	if b == nil {
 		return ErrNullPointerBucket
 	}
@@ -103,6 +104,12 @@ func (b *MemoryBucket) DeleteKey(key string) error {
 	}
 	return nil
 }
+
+func (b *MemoryBucket) CreateBucket(string) (Bucket, error) {
+	return nil, errors.New("not implemented")
+}
+func (b *MemoryBucket) GetBucket(string) (Bucket, error) { return nil, errors.New("not implemented") }
+func (b *MemoryBucket) DeleteBucket(string) error        { return errors.New("not implemented") }
 
 // Test the interface
 var (

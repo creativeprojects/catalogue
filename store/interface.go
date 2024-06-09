@@ -13,19 +13,28 @@ type Store interface {
 	View(func(transaction Transaction) error) error
 }
 
-type Transaction interface {
-	IsWritable() bool
-
+type Bucketeer interface {
 	CreateBucket(string) (Bucket, error)
 	GetBucket(string) (Bucket, error)
 	DeleteBucket(string) error
+}
+
+type Transaction interface {
+	IsWritable() bool
+
+	Bucketeer
 
 	Rollback() error
 	Commit() error
 }
 
+type KVPair interface {
+	Get(key string) ([]byte, error)
+	Put(key string, data []byte) error
+	Delete(key string) error
+}
+
 type Bucket interface {
-	GetKey(key string) ([]byte, error)
-	SetKey(key string, data []byte) error
-	DeleteKey(key string) error
+	Bucketeer
+	KVPair
 }

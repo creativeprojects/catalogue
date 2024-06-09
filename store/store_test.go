@@ -171,7 +171,7 @@ func TestStores(t *testing.T) {
 				if err != nil {
 					t.Fatalf("Error getting bucket %s: %s", name, err)
 				}
-				err = b.SetKey("something", []byte("is something"))
+				err = b.Put("something", []byte("is something"))
 				assert.Equal(t, ErrBucketReadOnly, err)
 			})
 

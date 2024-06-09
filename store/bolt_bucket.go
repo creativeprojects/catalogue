@@ -1,23 +1,22 @@
 package store
 
 import (
+	"errors"
+
 	bolt "go.etcd.io/bbolt"
 )
 
-// BoltBucket represents a bucket in memory (it is *never* saved)
 type BoltBucket struct {
 	bucket *bolt.Bucket
 }
 
-// newBoltBucket instantiate a new bucket in memory
 func newBoltBucket(bucket *bolt.Bucket) *BoltBucket {
 	return &BoltBucket{
 		bucket: bucket,
 	}
 }
 
-// GetKey returns a key from the bucket in memory
-func (b *BoltBucket) GetKey(key string) ([]byte, error) {
+func (b *BoltBucket) Get(key string) ([]byte, error) {
 	if b == nil {
 		return nil, ErrNullPointerBucket
 	}
@@ -31,8 +30,7 @@ func (b *BoltBucket) GetKey(key string) ([]byte, error) {
 	return bucket, nil
 }
 
-// SetKey sets a key in the memory bucket
-func (b *BoltBucket) SetKey(key string, data []byte) error {
+func (b *BoltBucket) Put(key string, data []byte) error {
 	if b == nil {
 		return ErrNullPointerBucket
 	}
@@ -46,8 +44,7 @@ func (b *BoltBucket) SetKey(key string, data []byte) error {
 	return b.bucket.Put([]byte(key), data)
 }
 
-// DeleteKey deletes a key from the memory bucket
-func (b *BoltBucket) DeleteKey(key string) error {
+func (b *BoltBucket) Delete(key string) error {
 	if b == nil {
 		return ErrNullPointerBucket
 	}
@@ -60,6 +57,12 @@ func (b *BoltBucket) DeleteKey(key string) error {
 
 	return b.bucket.Delete([]byte(key))
 }
+
+func (b *BoltBucket) CreateBucket(string) (Bucket, error) {
+	return nil, errors.New("not implemented")
+}
+func (b *BoltBucket) GetBucket(string) (Bucket, error) { return nil, errors.New("not implemented") }
+func (b *BoltBucket) DeleteBucket(string) error        { return errors.New("not implemented") }
 
 // Test the interface
 var (

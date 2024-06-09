@@ -16,7 +16,7 @@ type Volume struct {
 	VolumeType      Type
 	VolumeID        string
 	Format          string
-	Created         time.Time
+	Indexed         time.Time
 	Catalogued      time.Time
 	BytesTotal      uint64
 	BytesFree       uint64
@@ -36,7 +36,7 @@ func NewVolumeFromPath(volumePath string) (*Volume, error) {
 	var err error
 
 	volume := &Volume{
-		Created:         time.Now(),
+		Indexed:         time.Now(),
 		IncludeInSearch: true,
 	}
 	hostname, err := os.Hostname()
@@ -66,7 +66,7 @@ func NewVolumeFromPath(volumePath string) (*Volume, error) {
 // PrintVolume prints volume information to the console
 func PrintVolume(volume *Volume) {
 	fmt.Printf("   Hostname: %s\n", volume.Hostname)
-	fmt.Printf("    Created: %s\n", volume.Created)
+	fmt.Printf("    Indexed: %s\n", volume.Indexed.Format(time.DateTime))
 	fmt.Printf("       Name: %s\n", volume.Name)
 	fmt.Printf(" Connection: %s\n", volume.Connection)
 	fmt.Printf("         ID: %s\n", volume.VolumeID)
