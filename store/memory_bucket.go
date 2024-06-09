@@ -15,13 +15,12 @@ type MemoryBucket struct {
 }
 
 // newMemoryBucket instantiate a new bucket in memory
-func newMemoryBucket(keys map[string][]byte, writable bool) *MemoryBucket {
+func newMemoryBucket() *MemoryBucket {
 	return &MemoryBucket{
-		readKeys:    keys,
+		readKeys:    make(map[string][]byte, 0),
 		writeKeys:   make(map[string][]byte, 0),
 		deletedKeys: make(map[string]bool, 0),
 		mutex:       &sync.Mutex{},
-		writable:    writable,
 	}
 }
 
