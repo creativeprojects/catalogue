@@ -2,6 +2,7 @@ package volume
 
 import (
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -27,4 +28,7 @@ func TestCanGetVolumeInformation(t *testing.T) {
 	// assert.NotEmpty(t, vol.Path, "Path should not be empty")
 	assert.NotEmpty(t, vol.VolumeType.String(), "VolumeType should not be empty")
 	t.Logf("Device: %q Format: %q Mountpoint: %q Volume type: %q", vol.Device, vol.Format, vol.Path, vol.VolumeType.String())
+	if runtime.GOOS != "windows" {
+		assert.NotEmpty(t, vol.DeviceID, "DeviceID should not be empty")
+	}
 }

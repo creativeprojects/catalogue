@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"io"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -35,8 +34,6 @@ type SpinnerPrinter struct {
 
 	startedAt       time.Time
 	currentSequence string
-
-	Writer io.Writer
 }
 
 // UpdateText updates the message of the active SpinnerPrinter.
@@ -68,7 +65,7 @@ func (s *SpinnerPrinter) Start() *SpinnerPrinter {
 				if s.ShowTimer {
 					timer = " (" + time.Since(s.startedAt).Round(s.TimerRoundingFactor).String() + ")"
 				}
-				pterm.Fprinto(s.Writer, s.Style.Sprint(seq)+" "+s.MessageStyle.Sprint(s.Text())+s.TimerStyle.Sprint(timer))
+				pterm.Printo(" " + s.Style.Sprint(seq) + " " + s.MessageStyle.Sprint(s.Text()) + s.TimerStyle.Sprint(timer) + "\r")
 				s.currentSequence = seq
 				time.Sleep(s.Delay)
 			}
@@ -84,6 +81,6 @@ func (s *SpinnerPrinter) Stop() {
 		return
 	}
 	s.IsActive = false
-	pterm.Fprinto(s.Writer, strings.Repeat(" ", pterm.GetTerminalWidth()))
-	pterm.Fprinto(s.Writer)
+	pterm.Printo(strings.Repeat(" ", pterm.GetTerminalWidth()))
+	pterm.Printo()
 }

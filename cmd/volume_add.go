@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"os/signal"
 	"strings"
 	"sync"
 	"time"
@@ -36,6 +38,9 @@ var volumeAddCmd = &cobra.Command{
 			return
 		}
 
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+		defer stop()
+
 		vol, err := volume.NewVolumeFromPath(volumePath)
 		if err != nil {
 			pterm.Error.Println("Cannot get volume information:", err)
@@ -60,10 +65,10 @@ var volumeAddCmd = &cobra.Command{
 				}
 				progresser.Increment(fileIndexed.Path, fileIndexed.Info)
 			}
-			progresser.Success("Indexing complete in " + time.Since(start).String())
+			progresser.Stop("Indexing complete in " + time.Since(start).String())
 		}()
 		indexer := index.NewIndexer(volumePath, fileIndexedChannel)
-		indexer.Run()
+		indexer.Run(ctx)
 		close(fileIndexedChannel)
 		wg.Wait()
 	},

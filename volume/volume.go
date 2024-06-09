@@ -28,6 +28,7 @@ type Volume struct {
 	IncludeInSearch bool
 	Location        string
 	Connection      string
+	DeviceID        uint64 // Only for unix based systems to avoid traversing another mounted disk
 }
 
 // NewVolumeFromPath creates a populates Volume data from volumePath
@@ -52,6 +53,11 @@ func NewVolumeFromPath(volumePath string) (*Volume, error) {
 	err = getFilesystemInfo(volumePath, volume)
 	if err != nil {
 		return nil, fmt.Errorf("getFilesystemInfo: %w", err)
+	}
+
+	err = getDeviceID(volumePath, volume)
+	if err != nil {
+		return nil, fmt.Errorf("getDeviceID: %w", err)
 	}
 
 	return volume, nil

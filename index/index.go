@@ -1,6 +1,7 @@
 package index
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 
@@ -33,11 +34,11 @@ func NewFsIndexer(rootPath string, fileIndexedChannel chan<- FileIndexed, fs afe
 
 // Run starts the indexing process. It will walk the filesystem and send the results to the fileIndexedChannel.
 // The Run method will return after all files have been indexed.
-func (i *Indexer) Run() {
-	_ = i.walk(i.rootPath)
+func (i *Indexer) Run(ctx context.Context) error {
+	return i.walk(ctx, i.rootPath)
 }
 
-func (i *Indexer) walk(path string) error {
+func (i *Indexer) walk(ctx context.Context, path string) error {
 	file, err := i.fs.Open(path)
 	if err != nil {
 		i.fileIndexedChannel <- FileIndexed{Path: path, Error: err}
@@ -51,6 +52,9 @@ func (i *Indexer) walk(path string) error {
 	}
 
 	for _, name := range names {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
 		filename := filepath.Join(path, name)
 		fileInfo, err := lstatIfPossible(i.fs, filename)
 		if err != nil {
@@ -59,7 +63,7 @@ func (i *Indexer) walk(path string) error {
 		}
 		i.fileIndexedChannel <- FileIndexed{Path: filename, Info: fileInfo}
 		if fileInfo.IsDir() {
-			_ = i.walk(filename)
+			_ = i.walk(ctx, filename)
 		}
 	}
 	return nil

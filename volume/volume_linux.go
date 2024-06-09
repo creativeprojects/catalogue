@@ -170,3 +170,16 @@ func getDriveMount(partition string) (string, string) {
 
 	return strings.Join(mountPoints, ", "), filesystem
 }
+
+func getDeviceID(volumePath string, vol *Volume) error {
+	if vol == nil {
+		return errors.New("Null argument vol")
+	}
+	stat := &unix.Stat_t{}
+	err := unix.Stat(volumePath, stat)
+	if err != nil {
+		return err
+	}
+	vol.DeviceID = uint64(stat.Dev)
+	return nil
+}

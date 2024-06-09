@@ -41,13 +41,11 @@ func getDiskSpace(volumePath string, vol *Volume) error {
 }
 
 func getFilesystemInfo(volumePath string, vol *Volume) error {
-	var err error
-
 	if vol == nil {
 		return errors.New("Null argument vol")
 	}
 	stat := &unix.Statfs_t{}
-	err = unix.Statfs(volumePath, stat)
+	err := unix.Statfs(volumePath, stat)
 	if err != nil {
 		return err
 	}
@@ -72,8 +70,6 @@ func getFilesystemInfo(volumePath string, vol *Volume) error {
 }
 
 func getDriveInfo(partition string, vol *Volume) error {
-	var err error
-
 	if partition == "" {
 		return errors.New("Empty partition argument")
 	}
@@ -107,6 +103,19 @@ func getDriveInfo(partition string, vol *Volume) error {
 		vol.VolumeType = DriveRemovable
 	}
 
+	return nil
+}
+
+func getDeviceID(volumePath string, vol *Volume) error {
+	if vol == nil {
+		return errors.New("Null argument vol")
+	}
+	stat := &unix.Stat_t{}
+	err := unix.Stat(volumePath, stat)
+	if err != nil {
+		return err
+	}
+	vol.DeviceID = uint64(stat.Dev)
 	return nil
 }
 

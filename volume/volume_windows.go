@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package volume
@@ -116,4 +117,8 @@ func getDriveType(rootPath string) Type {
 	rootPathName, _ := windows.UTF16PtrFromString(rootPath)
 	driveType := windows.GetDriveType(rootPathName)
 	return Type(uint8(driveType))
+}
+
+func getDeviceID(_ string, _ *Volume) error {
+	return nil
 }
