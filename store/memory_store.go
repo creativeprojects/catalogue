@@ -6,7 +6,7 @@ import (
 )
 
 type MemoryStore struct {
-	buckets           map[string]*MemoryBucket
+	buckets           map[string]map[string][]byte
 	bucketsMutex      *sync.Mutex
 	writeMutex        *sync.Mutex
 	transactions      map[uint]*MemoryTransaction
@@ -16,7 +16,7 @@ type MemoryStore struct {
 
 func NewMemoryStore() *MemoryStore {
 	return &MemoryStore{
-		buckets:           make(map[string]*MemoryBucket, 0),
+		buckets:           make(map[string]map[string][]byte, 0),
 		bucketsMutex:      &sync.Mutex{},
 		writeMutex:        &sync.Mutex{},
 		transactions:      make(map[uint]*MemoryTransaction, 0),
@@ -110,13 +110,13 @@ func (s *MemoryStore) View(job func(transaction Transaction) error) error {
 }
 
 // getBucket returns a bucket from its name. If it does not exists, a new bucket will be created
-func (s *MemoryStore) getBucket(bucket string) *MemoryBucket {
+func (s *MemoryStore) getBucket(bucket string) map[string][]byte {
 	s.bucketsMutex.Lock()
 	defer s.bucketsMutex.Unlock()
 
 	b, ok := s.buckets[bucket]
 	if !ok {
-		b = newMemoryBucket()
+		b = make(map[string][]byte)
 		s.buckets[bucket] = b
 	}
 	return b

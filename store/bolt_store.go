@@ -34,6 +34,7 @@ func (s *BoltStore) Close() {
 	s.db.Close()
 }
 
+// Update run the job in a transaction
 func (s *BoltStore) Update(job func(transaction Transaction) error) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
 		t := newBoltTransaction(tx)
@@ -41,6 +42,7 @@ func (s *BoltStore) Update(job func(transaction Transaction) error) error {
 	})
 }
 
+// View run the job in a read-only transaction
 func (s *BoltStore) View(job func(transaction Transaction) error) error {
 	return s.db.View(func(tx *bolt.Tx) error {
 		t := newBoltTransaction(tx)

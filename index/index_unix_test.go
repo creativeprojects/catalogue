@@ -81,8 +81,8 @@ func TestIndexing(t *testing.T) {
 			}(infoChannel)
 
 			volume := &volume.Volume{
-				Mountpoint: "/",
-				DeviceID:   deviceID,
+				PathIndex: "/",
+				DeviceID:  deviceID,
 			}
 			indexer := NewFsIndexer(volume, infoChannel, testCase.fs)
 			err := indexer.Run(context.Background())

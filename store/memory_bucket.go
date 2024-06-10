@@ -5,22 +5,19 @@ import (
 	"sync"
 )
 
-// MemoryBucket represents a bucket in memory (it is *never* saved)
+// MemoryBucket represents a bucket in memory during a transaction
 type MemoryBucket struct {
-	readKeys    map[string][]byte
-	writeKeys   map[string][]byte
-	deletedKeys map[string]bool
-	mutex       *sync.Mutex
-	writable    bool
+	data     map[string][]byte
+	mutex    *sync.Mutex
+	writable bool
 }
 
 // newMemoryBucket instantiate a new bucket in memory
-func newMemoryBucket() *MemoryBucket {
+func newMemoryBucket(data map[string][]byte, writable bool) *MemoryBucket {
 	return &MemoryBucket{
-		readKeys:    make(map[string][]byte, 0),
-		writeKeys:   make(map[string][]byte, 0),
-		deletedKeys: make(map[string]bool, 0),
-		mutex:       &sync.Mutex{},
+		data:     data,
+		mutex:    &sync.Mutex{},
+		writable: writable,
 	}
 }
 
@@ -39,20 +36,7 @@ func (b *MemoryBucket) Get(key string) ([]byte, error) {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 
-	// Was the key deleted?
-	deleted, ok := b.deletedKeys[key]
-	if ok && deleted {
-		return nil, ErrKeyNotFound
-	}
-
-	// Was the key updated?
-	data, ok = b.writeKeys[key]
-	if ok {
-		return data, nil
-	}
-
-	// Last resort: key was originally in the bucket
-	data, ok = b.readKeys[key]
+	data, ok = b.data[key]
 	if ok {
 		return data, nil
 	}
@@ -74,11 +58,7 @@ func (b *MemoryBucket) Put(key string, data []byte) error {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 
-	b.writeKeys[key] = data
-	// In case the key was previously deleted
-	if _, found := b.deletedKeys[key]; found {
-		delete(b.deletedKeys, key)
-	}
+	b.data[key] = data
 	return nil
 }
 
@@ -97,9 +77,8 @@ func (b *MemoryBucket) Delete(key string) error {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 
-	b.deletedKeys[key] = true
-	if _, found := b.writeKeys[key]; found {
-		delete(b.writeKeys, key)
+	if _, found := b.data[key]; found {
+		delete(b.data, key)
 	}
 	return nil
 }
@@ -109,6 +88,11 @@ func (b *MemoryBucket) CreateBucket(string) (Bucket, error) {
 }
 func (b *MemoryBucket) GetBucket(string) (Bucket, error) { return nil, errors.New("not implemented") }
 func (b *MemoryBucket) DeleteBucket(string) error        { return errors.New("not implemented") }
+
+// save returns the data in the bucket
+func (b *MemoryBucket) save() map[string][]byte {
+	return b.data
+}
 
 // Test the interface
 var (

@@ -24,7 +24,7 @@ type Volume struct {
 	HiddenFiles     uint64
 	Device          string
 	Path            string // Original path where the volume is mounted
-	Mountpoint      string // Volume path sent as a parameter to the indexer
+	PathIndex       string // Volume path sent as a parameter to the indexer
 	Hostname        string
 	IncludeInSearch bool
 	Location        string
@@ -39,7 +39,7 @@ func NewVolumeFromPath(volumePath string) (*Volume, error) {
 	volume := &Volume{
 		Indexed:         time.Now(),
 		IncludeInSearch: true,
-		Mountpoint:      volumePath,
+		PathIndex:       volumePath,
 	}
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -75,6 +75,7 @@ func PrintVolume(volume *Volume) {
 	fmt.Printf("     Device: %s\n", volume.Device)
 	fmt.Printf("       Type: %s\n", volume.VolumeType.String())
 	fmt.Printf("       Path: %s\n", volume.Path)
+	fmt.Printf("   To index: %s\n", volume.PathIndex)
 	fmt.Printf("     Format: %s\n", volume.Format)
 	fmt.Printf("Total space: %s\n", getBinaryBytes(volume.BytesTotal))
 	fmt.Printf(" Free space: %s\n", getBinaryBytes(volume.BytesFree))

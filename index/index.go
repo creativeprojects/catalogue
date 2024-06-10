@@ -22,7 +22,7 @@ type Indexer struct {
 }
 
 func NewIndexer(volume *volume.Volume, fileIndexedChannel chan<- FileIndexed) *Indexer {
-	return NewFsIndexer(volume, fileIndexedChannel, os.DirFS(volume.Mountpoint))
+	return NewFsIndexer(volume, fileIndexedChannel, os.DirFS(volume.PathIndex))
 }
 
 func NewFsIndexer(volume *volume.Volume, fileIndexedChannel chan<- FileIndexed, fs fs.FS) *Indexer {

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -18,15 +19,19 @@ type testStoreData struct {
 }
 
 func TestClosingStoreShouldPanicIfTransactionIsRunning(t *testing.T) {
+	t.Parallel()
+
 	store := NewMemoryStore()
 	store.Begin(false)
 	assert.Panics(t, store.Close)
 }
 
 func TestStores(t *testing.T) {
+	t.Parallel()
+
 	// Prepare stores
-	testStores := make([]testStoreData, 1)
-	testStores[0] = testStoreData{"InMemory", NewMemoryStore()}
+	testStores := make([]testStoreData, 0, 2)
+	testStores = append(testStores, testStoreData{"InMemory", NewMemoryStore()})
 
 	// Add bolt store if the database path is set in the environment
 	testPath := os.Getenv("DB_TEST_PATH")
@@ -34,7 +39,10 @@ func TestStores(t *testing.T) {
 		database := path.Join(testPath, "store_test.db")
 		boltStore, err := NewBoltStore(database)
 		if err == nil {
-			defer os.Remove(database)
+			t.Cleanup(func() {
+				boltStore.Close()
+				_ = os.Remove(database)
+			})
 			testStores = append(testStores, testStoreData{"BoltDB", boltStore})
 		} else {
 			t.Logf("BoltDB tests cannot run: %s", err)
@@ -42,76 +50,110 @@ func TestStores(t *testing.T) {
 	}
 
 	for _, testData := range testStores {
-		testData := testData // capture range variable
 		t.Run(testData.name, func(t *testing.T) {
-			// Don't run this suite in parallel, or the store will be closed immediately
 
 			t.Run("TestCanCreateReadonlyTransaction", func(t *testing.T) {
 				t.Parallel()
 				tx, err := testData.store.Begin(false)
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 
 				assert.NotNil(t, tx)
 				assert.False(t, tx.IsWritable())
 				tx.Rollback()
 			})
 
+			t.Run("TestCanCreateTwoReadonlyTransaction", func(t *testing.T) {
+				t.Parallel()
+				tx1, err := testData.store.Begin(false)
+				require.NoError(t, err)
+				assert.NotNil(t, tx1)
+
+				tx2, err := testData.store.Begin(false)
+				require.NoError(t, err)
+				assert.NotNil(t, tx2)
+
+				assert.False(t, tx1.IsWritable())
+				assert.False(t, tx2.IsWritable())
+				tx1.Rollback()
+				tx2.Rollback()
+			})
+
 			t.Run("TestCanCreateWriteTransaction", func(t *testing.T) {
 				t.Parallel()
 				tx, err := testData.store.Begin(true)
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 
 				assert.NotNil(t, tx)
 				assert.True(t, tx.IsWritable())
 				tx.Rollback()
 			})
 
-			t.Run("TestLoadEmptyNameBucket", func(t *testing.T) {
+			t.Run("TestCanCreateReadWriteTransaction", func(t *testing.T) {
+				// don't run this test in parallel (risk of deadlock)
+				tx1, err := testData.store.Begin(false)
+				require.NoError(t, err)
+				assert.NotNil(t, tx1)
+
+				tx2, err := testData.store.Begin(true)
+				require.NoError(t, err)
+				assert.NotNil(t, tx2)
+
+				assert.False(t, tx1.IsWritable())
+				assert.True(t, tx2.IsWritable())
+				tx1.Rollback()
+				tx2.Rollback()
+			})
+
+			t.Run("TestCanCreateWriteReadTransaction", func(t *testing.T) {
+				// don't run this test in parallel (risk of deadlock)
+				tx1, err := testData.store.Begin(true)
+				require.NoError(t, err)
+				assert.NotNil(t, tx1)
+
+				tx2, err := testData.store.Begin(false)
+				require.NoError(t, err)
+				assert.NotNil(t, tx2)
+
+				assert.True(t, tx1.IsWritable())
+				assert.False(t, tx2.IsWritable())
+				tx1.Rollback()
+				tx2.Rollback()
+			})
+
+			t.Run("TestCannotLoadEmptyNameBucket", func(t *testing.T) {
 				t.Parallel()
 				tx, err := testData.store.Begin(false)
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 				defer tx.Rollback()
 
 				_, err = tx.GetBucket("")
 				assert.Equal(t, ErrBucketNoName, err)
 			})
 
-			t.Run("TestCreateEmptyNameBucket", func(t *testing.T) {
+			t.Run("TestCannotCreateEmptyNameBucket", func(t *testing.T) {
 				t.Parallel()
 				tx, err := testData.store.Begin(true)
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 				defer tx.Rollback()
 
 				_, err = tx.CreateBucket("")
 				assert.Equal(t, ErrBucketNoName, err)
 			})
 
-			t.Run("TestDeleteEmptyNameBucket", func(t *testing.T) {
+			t.Run("TestCannotDeleteEmptyNameBucket", func(t *testing.T) {
 				t.Parallel()
 				tx, err := testData.store.Begin(true)
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 				defer tx.Rollback()
 
 				err = tx.DeleteBucket("")
 				assert.Equal(t, ErrBucketNoName, err)
 			})
 
-			t.Run("TestLoadUnknownBucket", func(t *testing.T) {
+			t.Run("TestCannotLoadUnknownBucket", func(t *testing.T) {
 				t.Parallel()
 				tx, err := testData.store.Begin(false)
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 				defer tx.Rollback()
 
 				_, err = tx.GetBucket(UnknownBucketKey)
@@ -121,9 +163,7 @@ func TestStores(t *testing.T) {
 			t.Run("TestCannotCreateBucketInReadOnlyTransaction", func(t *testing.T) {
 				t.Parallel()
 				tx, err := testData.store.Begin(false)
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 				defer tx.Rollback()
 
 				_, err = tx.CreateBucket(UnknownBucketKey)
@@ -133,9 +173,7 @@ func TestStores(t *testing.T) {
 			t.Run("TestCannotDeleteBucketInReadOnlyTransaction", func(t *testing.T) {
 				t.Parallel()
 				tx, err := testData.store.Begin(false)
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 				defer tx.Rollback()
 
 				err = tx.DeleteBucket(UnknownBucketKey)
@@ -149,30 +187,59 @@ func TestStores(t *testing.T) {
 				// Isolate transaction
 				func() {
 					tx, err := testData.store.Begin(true)
-					if err != nil {
-						t.Fatal(err)
-					}
+					require.NoError(t, err)
 					defer tx.Rollback()
 
 					_, err = tx.CreateBucket(name)
-					if err != nil {
-						t.Fatal(err)
-					}
+					require.NoError(t, err)
 					tx.Commit()
 				}()
 
 				tx, err := testData.store.Begin(false)
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 				defer tx.Rollback()
 
 				b, err := tx.GetBucket(name)
-				if err != nil {
-					t.Fatalf("Error getting bucket %s: %s", name, err)
-				}
+				require.NoError(t, err)
 				err = b.Put("something", []byte("is something"))
 				assert.Equal(t, ErrBucketReadOnly, err)
+			})
+
+			t.Run("TestLoadingUnknownKeyFromBucket", func(t *testing.T) {
+				t.Parallel()
+				name := path.Base(t.Name())
+
+				tx, err := testData.store.Begin(true)
+				require.NoError(t, err)
+				defer tx.Rollback()
+
+				bucket, err := tx.CreateBucket(name)
+				require.NoError(t, err)
+
+				_, err = bucket.Get("some-key")
+				assert.Equal(t, ErrKeyNotFound, err)
+			})
+
+			t.Run("TestSetKeyAndGetKeyFromBucket", func(t *testing.T) {
+				t.Parallel()
+				name := path.Base(t.Name())
+
+				tx, err := testData.store.Begin(true)
+				require.NoError(t, err)
+				defer tx.Rollback()
+
+				bucket, err := tx.CreateBucket(name)
+				require.NoError(t, err)
+
+				var value1, value2 []byte
+
+				value1 = []byte("test data")
+				err = bucket.Put("test-key", value1)
+				require.NoError(t, err)
+
+				value2, err = bucket.Get("test-key")
+				require.NoError(t, err)
+				assert.Equal(t, value1, value2)
 			})
 
 		})
