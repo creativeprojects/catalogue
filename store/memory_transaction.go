@@ -61,7 +61,7 @@ func (t *MemoryTransaction) Commit() error {
 
 		// Updated buckets
 		for name, updated := range t.writeBuckets {
-			t.saveBucket(name, updated)
+			t.store.saveBucket(name, updated.getData())
 		}
 	}
 	t.close()
@@ -96,7 +96,7 @@ func (t *MemoryTransaction) CreateBucket(bucket string) (Bucket, error) {
 		delete(t.deletedBuckets, bucket)
 	}
 
-	b := newMemoryBucket(make(map[string][]byte), t.writable)
+	b := newMemoryBucket(bucket, make(map[string][]byte), t)
 	t.writeBuckets[bucket] = b
 	return b, nil
 }
@@ -122,7 +122,7 @@ func (t *MemoryTransaction) GetBucket(bucket string) (Bucket, error) {
 
 	// Check for untouched existing bucket
 	if b, ok := t.readBuckets[bucket]; ok {
-		return newMemoryBucket(copyKeyValues(b), t.writable), nil
+		return newMemoryBucket(bucket, copyKeyValues(b), t), nil
 	}
 	return nil, ErrBucketNotFound
 }
@@ -141,10 +141,6 @@ func (t *MemoryTransaction) DeleteBucket(bucket string) error {
 		delete(t.writeBuckets, bucket)
 	}
 	return nil
-}
-
-func (t *MemoryTransaction) saveBucket(name string, b *MemoryBucket) {
-	t.store.buckets[name] = b.save()
 }
 
 func copyKeyValues(b map[string][]byte) map[string][]byte {

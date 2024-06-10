@@ -1,23 +1,24 @@
 package store
 
 import (
-	"errors"
 	"sync"
 )
 
 // MemoryBucket represents a bucket in memory during a transaction
 type MemoryBucket struct {
-	data     map[string][]byte
-	mutex    *sync.Mutex
-	writable bool
+	name  string
+	data  map[string][]byte
+	mutex *sync.Mutex
+	tx    *MemoryTransaction
 }
 
 // newMemoryBucket instantiate a new bucket in memory
-func newMemoryBucket(data map[string][]byte, writable bool) *MemoryBucket {
+func newMemoryBucket(name string, data map[string][]byte, tx *MemoryTransaction) *MemoryBucket {
 	return &MemoryBucket{
-		data:     data,
-		mutex:    &sync.Mutex{},
-		writable: writable,
+		name:  name,
+		data:  data,
+		mutex: &sync.Mutex{},
+		tx:    tx,
 	}
 }
 
@@ -51,7 +52,7 @@ func (b *MemoryBucket) Put(key string, data []byte) error {
 	if key == "" {
 		return ErrKeyNoName
 	}
-	if !b.writable {
+	if !b.tx.IsWritable() {
 		return ErrBucketReadOnly
 	}
 
@@ -70,7 +71,7 @@ func (b *MemoryBucket) Delete(key string) error {
 	if key == "" {
 		return ErrKeyNoName
 	}
-	if !b.writable {
+	if !b.tx.IsWritable() {
 		return ErrBucketReadOnly
 	}
 
@@ -83,14 +84,24 @@ func (b *MemoryBucket) Delete(key string) error {
 	return nil
 }
 
-func (b *MemoryBucket) CreateBucket(string) (Bucket, error) {
-	return nil, errors.New("not implemented")
+func (b *MemoryBucket) CreateBucket(name string) (Bucket, error) {
+	return b.tx.CreateBucket(b.bucketName(name))
 }
-func (b *MemoryBucket) GetBucket(string) (Bucket, error) { return nil, errors.New("not implemented") }
-func (b *MemoryBucket) DeleteBucket(string) error        { return errors.New("not implemented") }
 
-// save returns the data in the bucket
-func (b *MemoryBucket) save() map[string][]byte {
+func (b *MemoryBucket) GetBucket(name string) (Bucket, error) {
+	return b.tx.GetBucket(b.bucketName(name))
+}
+
+func (b *MemoryBucket) DeleteBucket(name string) error {
+	return b.tx.DeleteBucket(b.bucketName(name))
+}
+
+func (b *MemoryBucket) bucketName(name string) string {
+	return b.name + "/" + name
+}
+
+// getData returns the data in the bucket
+func (b *MemoryBucket) getData() map[string][]byte {
 	return b.data
 }
 

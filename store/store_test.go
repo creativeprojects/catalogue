@@ -242,6 +242,60 @@ func TestStores(t *testing.T) {
 				assert.Equal(t, value1, value2)
 			})
 
+			t.Run("TestCreateBucketInBucket", func(t *testing.T) {
+				t.Parallel()
+				name := path.Base(t.Name())
+
+				tx, err := testData.store.Begin(true)
+				require.NoError(t, err)
+				defer tx.Rollback()
+
+				bucket, err := tx.CreateBucket(name)
+				require.NoError(t, err)
+
+				_, err = bucket.CreateBucket("sub-bucket")
+				require.NoError(t, err)
+			})
+
+			t.Run("TestGetBucketInBucket", func(t *testing.T) {
+				t.Parallel()
+				name := path.Base(t.Name())
+
+				tx, err := testData.store.Begin(true)
+				require.NoError(t, err)
+				defer tx.Rollback()
+
+				bucket, err := tx.CreateBucket(name)
+				require.NoError(t, err)
+
+				_, err = bucket.CreateBucket("sub-bucket")
+				require.NoError(t, err)
+
+				_, err = bucket.GetBucket("sub-bucket")
+				require.NoError(t, err)
+			})
+
+			t.Run("TestDeleteBucketInBucket", func(t *testing.T) {
+				t.Parallel()
+				name := path.Base(t.Name())
+
+				tx, err := testData.store.Begin(true)
+				require.NoError(t, err)
+				defer tx.Rollback()
+
+				bucket, err := tx.CreateBucket(name)
+				require.NoError(t, err)
+
+				_, err = bucket.CreateBucket("sub-bucket")
+				require.NoError(t, err)
+
+				err = bucket.DeleteBucket("sub-bucket")
+				require.NoError(t, err)
+
+				_, err = bucket.GetBucket("sub-bucket")
+				require.ErrorIs(t, err, ErrBucketNotFound)
+			})
+
 		})
 		testData.store.Close()
 	}

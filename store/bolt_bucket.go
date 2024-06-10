@@ -1,8 +1,6 @@
 package store
 
 import (
-	"errors"
-
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -58,11 +56,25 @@ func (b *BoltBucket) Delete(key string) error {
 	return b.bucket.Delete([]byte(key))
 }
 
-func (b *BoltBucket) CreateBucket(string) (Bucket, error) {
-	return nil, errors.New("not implemented")
+func (b *BoltBucket) CreateBucket(name string) (Bucket, error) {
+	bucket, err := b.bucket.CreateBucket([]byte(name))
+	if err != nil {
+		return nil, err
+	}
+	return newBoltBucket(bucket), nil
 }
-func (b *BoltBucket) GetBucket(string) (Bucket, error) { return nil, errors.New("not implemented") }
-func (b *BoltBucket) DeleteBucket(string) error        { return errors.New("not implemented") }
+
+func (b *BoltBucket) GetBucket(name string) (Bucket, error) {
+	bucket := b.bucket.Bucket([]byte(name))
+	if bucket == nil {
+		return nil, ErrBucketNotFound
+	}
+	return newBoltBucket(bucket), nil
+}
+
+func (b *BoltBucket) DeleteBucket(name string) error {
+	return b.bucket.DeleteBucket([]byte(name))
+}
 
 // Test the interface
 var (

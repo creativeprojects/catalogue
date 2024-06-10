@@ -109,17 +109,12 @@ func (s *MemoryStore) View(job func(transaction Transaction) error) error {
 	return t.Commit()
 }
 
-// getBucket returns a bucket from its name. If it does not exists, a new bucket will be created
-func (s *MemoryStore) getBucket(bucket string) map[string][]byte {
+// saveBucket replaces the bucket data
+func (s *MemoryStore) saveBucket(bucket string, data map[string][]byte) {
 	s.bucketsMutex.Lock()
 	defer s.bucketsMutex.Unlock()
 
-	b, ok := s.buckets[bucket]
-	if !ok {
-		b = make(map[string][]byte)
-		s.buckets[bucket] = b
-	}
-	return b
+	s.buckets[bucket] = data
 }
 
 // deleteBucket removes the bucket from memory. It does not fail if the bucket was not found
