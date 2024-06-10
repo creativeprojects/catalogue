@@ -2,11 +2,11 @@ package index
 
 import (
 	"context"
+	"io/fs"
 	"os"
-	"path/filepath"
 
 	"github.com/creativeprojects/catalogue/platform"
-	"github.com/spf13/afero"
+	"github.com/creativeprojects/catalogue/volume"
 )
 
 type FileIndexed struct {
@@ -16,21 +16,19 @@ type FileIndexed struct {
 }
 
 type Indexer struct {
-	fs                 afero.Fs
-	rootPath           string
+	fs                 fs.FS
 	deviceID           uint64
 	fileIndexedChannel chan<- FileIndexed
 }
 
-func NewIndexer(rootPath string, deviceID uint64, fileIndexedChannel chan<- FileIndexed) *Indexer {
-	return NewFsIndexer(rootPath, deviceID, fileIndexedChannel, afero.NewOsFs())
+func NewIndexer(volume *volume.Volume, fileIndexedChannel chan<- FileIndexed) *Indexer {
+	return NewFsIndexer(volume, fileIndexedChannel, os.DirFS(volume.Mountpoint))
 }
 
-func NewFsIndexer(rootPath string, deviceID uint64, fileIndexedChannel chan<- FileIndexed, fs afero.Fs) *Indexer {
+func NewFsIndexer(volume *volume.Volume, fileIndexedChannel chan<- FileIndexed, fs fs.FS) *Indexer {
 	return &Indexer{
 		fs:                 fs,
-		rootPath:           rootPath,
-		deviceID:           deviceID,
+		deviceID:           volume.DeviceID,
 		fileIndexedChannel: fileIndexedChannel,
 	}
 }
@@ -38,48 +36,23 @@ func NewFsIndexer(rootPath string, deviceID uint64, fileIndexedChannel chan<- Fi
 // Run starts the indexing process. It will walk the filesystem and send the results to the fileIndexedChannel.
 // The Run method will return after all files have been indexed.
 func (i *Indexer) Run(ctx context.Context) error {
-	return i.walk(ctx, i.rootPath)
-}
-
-func (i *Indexer) walk(ctx context.Context, path string) error {
-	file, err := i.fs.Open(path)
-	if err != nil {
-		i.fileIndexedChannel <- FileIndexed{Path: path, Error: err}
-		return err
-	}
-	names, err := file.Readdirnames(-1)
-	file.Close()
-	if err != nil {
-		i.fileIndexedChannel <- FileIndexed{Path: path, Error: err}
-		return err
-	}
-
-	for _, name := range names {
+	return fs.WalkDir(i.fs, ".", func(path string, d fs.DirEntry, err error) error {
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
-		filename := filepath.Join(path, name)
-		fileInfo, err := lstatIfPossible(i.fs, filename)
 		if err != nil {
-			i.fileIndexedChannel <- FileIndexed{Path: filename, Error: err}
-			continue
+			i.fileIndexedChannel <- FileIndexed{Path: path, Error: err}
+			return nil
 		}
-		if !platform.IsWindows() && platform.DeviceID(fileInfo) != i.deviceID {
-			continue
+		fileInfo, err := d.Info()
+		if err != nil {
+			i.fileIndexedChannel <- FileIndexed{Path: path, Error: err}
+			return nil
 		}
-		i.fileIndexedChannel <- FileIndexed{Path: filename, Info: fileInfo}
-		if fileInfo.IsDir() {
-			_ = i.walk(ctx, filename)
+		if !platform.IsWindows() && deviceID(fileInfo) != i.deviceID {
+			return fs.SkipDir
 		}
-	}
-	return nil
-}
-
-// if the filesystem supports it, use Lstat, else use fs.Stat
-func lstatIfPossible(fs afero.Fs, path string) (os.FileInfo, error) {
-	if lfs, ok := fs.(afero.Lstater); ok {
-		fi, _, err := lfs.LstatIfPossible(path)
-		return fi, err
-	}
-	return fs.Stat(path)
+		i.fileIndexedChannel <- FileIndexed{Path: path, Info: fileInfo}
+		return nil
+	})
 }

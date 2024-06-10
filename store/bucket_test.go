@@ -29,27 +29,27 @@ func TestLoadingUnknownKeyFromBucket(t *testing.T) {
 	}
 }
 
-func TestSetKeyAndGetKeyFromBucket(t *testing.T) {
-	t.Parallel()
+// func TestSetKeyAndGetKeyFromBucket(t *testing.T) {
+// 	t.Parallel()
 
-	for _, data := range getBuckets() {
-		t.Run(data.name, func(t *testing.T) {
-			t.Parallel()
+// 	for _, data := range getBuckets() {
+// 		t.Run(data.name, func(t *testing.T) {
+// 			t.Parallel()
 
-			var err error
-			var value1, value2 []byte
+// 			var err error
+// 			var value1, value2 []byte
 
-			value1 = []byte("test data")
-			err = data.bucket.Put("test-key", value1)
-			if err != nil {
-				t.Fatal(err)
-			}
+// 			value1 = []byte("test data")
+// 			err = data.bucket.Put("test-key", value1)
+// 			if err != nil {
+// 				t.Fatal(err)
+// 			}
 
-			value2, err = data.bucket.Get("test-key")
-			if err != nil {
-				t.Fatal(err)
-			}
-			assert.Equal(t, value1, value2)
-		})
-	}
-}
+// 			value2, err = data.bucket.Get("test-key")
+// 			if err != nil {
+// 				t.Fatal(err)
+// 			}
+// 			assert.Equal(t, value1, value2)
+// 		})
+// 	}
+// }

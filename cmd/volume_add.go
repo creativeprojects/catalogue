@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
 	"sync"
 	"time"
 
@@ -67,7 +66,7 @@ var volumeAddCmd = &cobra.Command{
 				progresser.Increment(fileIndexed.Path, fileIndexed.Info)
 			}
 		}(progresser)
-		indexer := index.NewIndexer(volumePath, vol.DeviceID, fileIndexedChannel)
+		indexer := index.NewIndexer(vol, fileIndexedChannel)
 		err = indexer.Run(ctx)
 		close(fileIndexedChannel)
 		if err != nil {
@@ -79,12 +78,6 @@ var volumeAddCmd = &cobra.Command{
 		}
 		wg.Wait()
 	},
-}
-
-func printStat(stat os.FileInfo) {
-	fmt.Printf("Name: %s\n", stat.Name())
-	fmt.Printf("Type: %s\n", strings.Join(getFileTypes(stat.Mode()), ", "))
-	fmt.Printf("Sys: %+v\n", stat.Sys())
 }
 
 func getFileTypes(mode os.FileMode) []string {

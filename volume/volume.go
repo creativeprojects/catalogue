@@ -23,7 +23,8 @@ type Volume struct {
 	RegularFiles    uint64
 	HiddenFiles     uint64
 	Device          string
-	Path            string
+	Path            string // Original path where the volume is mounted
+	Mountpoint      string // Volume path sent as a parameter to the indexer
 	Hostname        string
 	IncludeInSearch bool
 	Location        string
@@ -38,6 +39,7 @@ func NewVolumeFromPath(volumePath string) (*Volume, error) {
 	volume := &Volume{
 		Indexed:         time.Now(),
 		IncludeInSearch: true,
+		Mountpoint:      volumePath,
 	}
 	hostname, err := os.Hostname()
 	if err != nil {

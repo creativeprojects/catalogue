@@ -5,7 +5,6 @@ go 1.22
 require (
 	github.com/google/uuid v1.6.0
 	github.com/pterm/pterm v0.12.79
-	github.com/spf13/afero v1.11.0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
 	go.etcd.io/bbolt v1.3.10
