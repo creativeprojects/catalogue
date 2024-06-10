@@ -27,6 +27,7 @@ func TestCanGetVolumeInformation(t *testing.T) {
 	assert.NotEmpty(t, vol.Device, "Device should not be empty")
 	assert.NotEmpty(t, vol.PathIndex, "Mountpoint should not be empty")
 	assert.NotEmpty(t, vol.VolumeType.String(), "VolumeType should not be empty")
+	assert.NotEmpty(t, vol.VolumeID, "VolumeID should not be empty")
 	t.Logf("Device: %q Format: %q Path: %q Volume type: %q", vol.Device, vol.Format, vol.Path, vol.VolumeType.String())
 	if !platform.IsWindows() {
 		assert.NotEmpty(t, vol.DeviceID, "DeviceID should not be empty")

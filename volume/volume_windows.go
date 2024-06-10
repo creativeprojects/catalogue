@@ -62,6 +62,7 @@ func getFilesystemInfo(volumePath string, vol *Volume) error {
 	vol.Name = uint16PtrToString(volumeNameBuffer, volumeNameSize)
 	vol.Format = uint16PtrToString(fileSystemNameBuffer, fileSystemNameSize)
 	vol.Path = rootPath
+	vol.VolumeID = fmt.Sprintf("%x", volumeNameSerialNumber)
 
 	// Get device GUID. It's ok if it's not available
 	vol.Device, _ = getVolumeGUID(rootPath)
