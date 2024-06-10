@@ -4,20 +4,15 @@ import (
 	"fmt"
 	"os"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 // Volume represents a volume entity
 type Volume struct {
-	ID              int
-	UID             uuid.UUID
 	Name            string
 	VolumeType      Type
 	VolumeID        string
 	Format          string
 	Indexed         time.Time
-	Catalogued      time.Time
 	BytesTotal      uint64
 	BytesFree       uint64
 	RegularFiles    uint64
@@ -27,9 +22,9 @@ type Volume struct {
 	PathIndex       string // Volume path sent as a parameter to the indexer
 	Hostname        string
 	IncludeInSearch bool
-	Location        string
+	Location        string // Physical location of the removable drive
 	Connection      string
-	DeviceID        uint64 // Only for unix based systems to avoid traversing another mounted disk
+	DeviceID        uint64 `json:"-"` // Only for unix based systems to avoid traversing another mounted disk
 }
 
 // NewVolumeFromPath creates a populates Volume data from volumePath

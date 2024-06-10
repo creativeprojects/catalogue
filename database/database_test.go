@@ -19,7 +19,7 @@ type testStoreData struct {
 func TestDatabase(t *testing.T) {
 	// Prepare stores
 	testStores := make([]testStoreData, 0, 2)
-	// testStores = append(testStores, testStoreData{"InMemory", store.NewMemoryStore()})
+	testStores = append(testStores, testStoreData{"InMemory", store.NewMemoryStore()})
 
 	// Add bolt store if the database path is set in the environment
 	testPath := os.Getenv("DB_TEST_PATH")

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/creativeprojects/catalogue/store"
+	"github.com/creativeprojects/catalogue/volume"
 	"github.com/google/uuid"
 )
 
@@ -100,6 +101,16 @@ func (d *Database) Stats() Stats {
 		return nil
 	})
 	return stats
+}
+
+func (d *Database) IndexVolume(vol *volume.Volume) {
+	// d.storage.Update(func(transaction store.Transaction) error {
+	// 	bucket, err := transaction.GetBucket(BucketVolumes)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	return nil
+	// })
 }
 
 func uint64ToBytes(value uint64) []byte {
