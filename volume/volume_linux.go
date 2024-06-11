@@ -1,13 +1,9 @@
-//go:build linux
-// +build linux
-
 package volume
 
 import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -52,25 +48,15 @@ func getFilesystemInfo(volumePath string, vol *Volume) error {
 	major := sys.Dev >> deviceMajorShift
 	minor := sys.Dev & deviceMinorMask
 
-	devices, err := ioutil.ReadDir("/dev")
+	err = addMountInfo(uint32(major), uint32(minor), vol)
 	if err != nil {
 		return err
 	}
-	partition := ""
-	for _, fileInfo := range devices {
-		fileSys := fileInfo.Sys().(*syscall.Stat_t)
-		// For device files, the device IDs are available from Rdev
-		if fileSys.Rdev == sys.Dev {
-			partition = fileInfo.Name()
-		}
-	}
-	if partition == "" {
-		return fmt.Errorf("Cannot find device %d:%d in /dev", major, minor)
-	}
-	pterm.Debug.Printf("File is on device %d:%d (%s)\n", major, minor, partition)
 
-	vol.Device = "/dev/" + partition
-	vol.Path, vol.Format = getDriveMount(vol.Device)
+	if !strings.HasPrefix(vol.Device, "/dev/") {
+		// this is a virtual device
+		return nil
+	}
 
 	// Lookup for udevadm - typically containers don't include the tool
 	if udevadm, _ := exec.LookPath("udevadm"); udevadm == "" {
@@ -78,7 +64,7 @@ func getFilesystemInfo(volumePath string, vol *Volume) error {
 	}
 
 	// Fill in more information from udevadm tool
-	err = getDriveInfo(partition, vol)
+	err = getDriveInfo(vol.Device, vol)
 	if err != nil {
 		return err
 	}
@@ -138,37 +124,87 @@ func getDriveInfo(partition string, vol *Volume) error {
 	return nil
 }
 
-func getDriveMount(partition string) (string, string) {
-	mounts, err := ioutil.ReadFile("/proc/mounts")
+func addMountInfo(major, minor uint32, vol *Volume) error {
+	mounts, err := os.ReadFile("/proc/self/mountinfo")
 	if err != nil {
-		return "", ""
+		return err
 	}
-	mountPoints := make([]string, 0)
-	filesystem := ""
+
 	buffer := bytes.NewBuffer(mounts)
+	return addMountInfoFromBuffer(buffer, major, minor, vol)
+}
+
+func addMountInfoFromBuffer(buffer *bytes.Buffer, major, minor uint32, vol *Volume) error {
+	/*
+	   See http://man7.org/linux/man-pages/man5/proc.5.html
+
+	   36 35 98:0 /mnt1 /mnt2 rw,noatime master:1 - ext3 /dev/root rw,errors=continue
+	   (1)(2)(3)   (4)   (5)      (6)      (7)   (8) (9)   (10)         (11)
+
+	   (1) mount ID:  unique identifier of the mount (may be reused after umount)
+	   (2) parent ID:  ID of parent (or of self for the top of the mount tree)
+	   (3) major:minor:  value of st_dev for files on filesystem
+	   (4) root:  root of the mount within the filesystem
+	   (5) mount point:  mount point relative to the process's root
+	   (6) mount options:  per mount options
+	   (7) optional fields:  zero or more fields of the form "tag[:value]"
+	   (8) separator:  marks the end of the optional fields
+	   (9) filesystem type:  name of filesystem of the form "type[.subtype]"
+	   (10) mount source:  filesystem specific information or "none"
+	   (11) super options:  per super block options
+	*/
+	const (
+		keyMountID = iota
+		keyParentID
+		keyDevice
+		keyRootMountPoint
+		keyMountPoint
+		keyMountOptions
+		keyOptionalFields
+	)
+	const (
+		keyFilesystemType = iota
+		keyMountSource
+		keySuperOptions
+	)
+
+	device := fmt.Sprintf("%d:%d", major, minor)
+
 	for {
 		line, err := buffer.ReadString('\n')
 		if err != nil {
 			break
 		}
 		line = strings.TrimSpace(line)
-		parts := strings.SplitN(line, " ", 4)
-		if len(parts) < 3 {
+		if len(line) == 0 {
 			continue
 		}
-		if parts[fsdevice] == partition {
-			mountPoints = append(mountPoints, parts[fsmount])
-			if filesystem == "" {
-				filesystem = parts[fstype]
-			}
-			if parts[fstype] != filesystem {
-				// Not sure it would actually happen?
-				filesystem += ", " + parts[fstype]
-			}
+		parts := strings.Split(line, " - ")
+		if len(parts) != 2 {
+			continue
 		}
+
+		left := strings.Split(parts[0], " ")
+		if len(left) < keyOptionalFields+1 {
+			continue
+		}
+		if left[keyDevice] != device {
+			continue
+		}
+		vol.VolumeID = left[keyMountID]
+		vol.Path = left[keyMountPoint]
+
+		right := strings.Split(parts[1], " ")
+		if len(right) < keySuperOptions+1 {
+			continue
+		}
+		vol.Format = right[keyFilesystemType]
+		vol.Device = right[keyMountSource]
+		// we stop at the first match (bind-mounted filesystems may have multiple entries)
+		break
 	}
 
-	return strings.Join(mountPoints, ", "), filesystem
+	return nil
 }
 
 func getDeviceID(volumePath string, vol *Volume) error {
