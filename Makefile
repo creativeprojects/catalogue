@@ -31,10 +31,12 @@ build:
 		$(GOBUILD) -o $(BINARY) -v
 
 build-mac:
-		GOOS="darwin" GOARCH="amd64" $(GOBUILD) -o $(BINARY_DARWIN) -v
+		GOOS="darwin" GOARCH="amd64" $(GOBUILD) -o $(BINARY_DARWIN)_x86 -v
+		GOOS="darwin" GOARCH="arm64" $(GOBUILD) -o $(BINARY_DARWIN)_arm64 -v
 
 build-linux:
-		GOOS="linux" GOARCH="amd64" $(GOBUILD) -o $(BINARY_LINUX) -v
+		GOOS="linux" GOARCH="amd64" $(GOBUILD) -o $(BINARY_LINUX)_x86 -v
+		GOOS="linux" GOARCH="arm64" $(GOBUILD) -o $(BINARY_LINUX)_arm64 -v
 
 build-windows:
 		GOOS="windows" GOARCH="amd64" $(GOBUILD) -o $(BINARY_WINDOWS) -v

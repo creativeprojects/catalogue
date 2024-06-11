@@ -6,8 +6,8 @@
 !**/*.go
 
 /catalogue
-/catalogue_darwin
-/catalogue_linux
+/catalogue_darwin*
+/catalogue_linux*
 /catalogue.exe
 
 /.vscode/*.log
