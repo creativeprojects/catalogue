@@ -38,3 +38,33 @@ func TestAddMountInfo(t *testing.T) {
 		})
 	}
 }
+
+func TestGetDriveInfo(t *testing.T) {
+	testCases := []struct {
+		filename string
+		expected Volume
+	}{
+		{
+			filename: "testdata/udevadm_boot",
+			expected: Volume{
+				Device:   "/dev/nvme0n1p16",
+				Name:     "BOOT",
+				Format:   "ext4",
+				VolumeID: "284f1818-7a35-4dca-95ab-0f161f5cb1be",
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.filename, func(t *testing.T) {
+			mounts, err := os.ReadFile(testCase.filename)
+			require.NoError(t, err)
+			buffer := bytes.NewBuffer(mounts)
+			volume := Volume{}
+
+			err = getDriveInfoFromBuffer(buffer, &volume)
+			require.NoError(t, err)
+			assert.EqualValues(t, testCase.expected, volume)
+		})
+	}
+}

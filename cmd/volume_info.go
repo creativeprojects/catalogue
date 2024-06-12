@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"os"
 
 	"github.com/creativeprojects/catalogue/volume"
@@ -38,9 +37,5 @@ var volumeInfoCmd = &cobra.Command{
 			return
 		}
 		volume.PrintVolume(vol)
-
-		encoder := json.NewEncoder(os.Stdout)
-		encoder.SetIndent("", "  ")
-		encoder.Encode(vol)
 	},
 }

@@ -54,7 +54,7 @@ func getFilesystemInfo(volumePath string, vol *Volume) error {
 	}
 
 	if !strings.HasPrefix(vol.Device, "/dev/") {
-		// this is a virtual device
+		vol.VolumeType = DriveVirtual
 		return nil
 	}
 
@@ -67,58 +67,6 @@ func getFilesystemInfo(volumePath string, vol *Volume) error {
 	err = getDriveInfo(vol.Device, vol)
 	if err != nil {
 		return err
-	}
-
-	return nil
-}
-
-func getDriveInfo(partition string, vol *Volume) error {
-	var err error
-
-	if partition == "" {
-		return errors.New("Empty partition argument")
-	}
-
-	cmd := exec.Command("udevadm", "info", "--query=property", "--name="+partition)
-	output, err := cmd.Output()
-	if err != nil {
-		return fmt.Errorf("Output(%v): %v", cmd.Args, err)
-	}
-
-	diskID := ""
-	buffer := bytes.NewBuffer(output)
-	for {
-		line, err := buffer.ReadString('\n')
-		if err != nil {
-			break
-		}
-		keyValuePair := strings.SplitN(line, "=", 2)
-		if len(keyValuePair) < 2 {
-			continue
-		}
-		value := strings.TrimSpace(keyValuePair[1])
-		switch keyValuePair[0] {
-		case "DEVNAME":
-			vol.Device = value
-
-		case "ID_CDROM":
-			if value == "1" {
-				vol.VolumeType = DriveOptical
-			}
-
-		case "ID_FS_TYPE":
-			vol.Format = value
-
-		case "ID_FS_UUID":
-			vol.VolumeID = value
-
-		case "ID_PART_ENTRY_DISK":
-			diskID = value
-		}
-	}
-
-	if diskID != "" {
-		pterm.Debug.Printf("Found partition from disk %q\n", diskID)
 	}
 
 	return nil
@@ -202,6 +150,65 @@ func addMountInfoFromBuffer(buffer *bytes.Buffer, major, minor uint32, vol *Volu
 		vol.Device = right[keyMountSource]
 		// we stop at the first match (bind-mounted filesystems may have multiple entries)
 		break
+	}
+
+	return nil
+}
+
+func getDriveInfo(device string, vol *Volume) error {
+	var err error
+
+	if device == "" {
+		return errors.New("empty device argument")
+	}
+
+	cmd := exec.Command("udevadm", "info", "--query=property", "--name="+device)
+	output, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("Output(%v): %v", cmd.Args, err)
+	}
+
+	buffer := bytes.NewBuffer(output)
+	return getDriveInfoFromBuffer(buffer, vol)
+}
+
+func getDriveInfoFromBuffer(buffer *bytes.Buffer, vol *Volume) error {
+	diskID := ""
+	for {
+		line, err := buffer.ReadString('\n')
+		if err != nil {
+			break
+		}
+		keyValuePair := strings.SplitN(line, "=", 2)
+		if len(keyValuePair) < 2 {
+			continue
+		}
+		value := strings.TrimSpace(keyValuePair[1])
+		switch keyValuePair[0] {
+		case "DEVNAME":
+			vol.Device = value
+
+		case "ID_CDROM":
+			if value == "1" {
+				vol.VolumeType = DriveOptical
+			}
+
+		case "ID_FS_LABEL":
+			vol.Name = value
+
+		case "ID_FS_TYPE":
+			vol.Format = value
+
+		case "ID_FS_UUID":
+			vol.VolumeID = value
+
+		case "ID_PART_ENTRY_DISK":
+			diskID = value
+		}
+	}
+
+	if diskID != "" {
+		pterm.Debug.Printf("Found partition from disk %q\n", diskID)
 	}
 
 	return nil
