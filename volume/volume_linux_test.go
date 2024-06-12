@@ -53,6 +53,35 @@ func TestGetDriveInfo(t *testing.T) {
 				VolumeID: "284f1818-7a35-4dca-95ab-0f161f5cb1be",
 			},
 		},
+		{
+			filename: "testdata/udevadm_sr0",
+			expected: Volume{
+				Connection: "scsi",
+				Device:     "/dev/sr0",
+				Name:       "cidata",
+				Format:     "iso9660",
+				VolumeID:   "2024-06-11-14-16-06-76",
+				VolumeType: DriveOptical,
+			},
+		},
+		{
+			filename: "testdata/udevadm_uefi",
+			expected: Volume{
+				Device:   "/dev/vda15",
+				Name:     "UEFI",
+				Format:   "vfat",
+				VolumeID: "5EEB-8351",
+			},
+		},
+		{
+			filename: "testdata/udevadm_loop",
+			expected: Volume{
+				Device:     "/dev/loop1",
+				Format:     "ext4",
+				VolumeID:   "2e7ce6b3-5c74-449d-9201-800a370358b1",
+				VolumeType: DriveLoopback,
+			},
+		},
 	}
 
 	for _, testCase := range testCases {

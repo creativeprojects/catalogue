@@ -9,7 +9,6 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/pterm/pterm"
 	"golang.org/x/sys/unix"
 )
 
@@ -57,6 +56,8 @@ func getFilesystemInfo(volumePath string, vol *Volume) error {
 		vol.VolumeType = DriveVirtual
 		return nil
 	}
+
+	vol.VolumeType = deviceTypeFromMajor(uint32(major))
 
 	// Lookup for udevadm - typically containers don't include the tool
 	if udevadm, _ := exec.LookPath("udevadm"); udevadm == "" {
@@ -173,7 +174,6 @@ func getDriveInfo(device string, vol *Volume) error {
 }
 
 func getDriveInfoFromBuffer(buffer *bytes.Buffer, vol *Volume) error {
-	diskID := ""
 	for {
 		line, err := buffer.ReadString('\n')
 		if err != nil {
@@ -185,8 +185,16 @@ func getDriveInfoFromBuffer(buffer *bytes.Buffer, vol *Volume) error {
 		}
 		value := strings.TrimSpace(keyValuePair[1])
 		switch keyValuePair[0] {
+		case "DEVPATH":
+			if strings.HasPrefix(value, "/devices/virtual/block/loop") {
+				vol.VolumeType = DriveLoopback
+			}
+
 		case "DEVNAME":
 			vol.Device = value
+
+		case "ID_BUS":
+			vol.Connection = value
 
 		case "ID_CDROM":
 			if value == "1" {
@@ -201,14 +209,7 @@ func getDriveInfoFromBuffer(buffer *bytes.Buffer, vol *Volume) error {
 
 		case "ID_FS_UUID":
 			vol.VolumeID = value
-
-		case "ID_PART_ENTRY_DISK":
-			diskID = value
 		}
-	}
-
-	if diskID != "" {
-		pterm.Debug.Printf("Found partition from disk %q\n", diskID)
 	}
 
 	return nil
@@ -225,4 +226,24 @@ func getDeviceID(volumePath string, vol *Volume) error {
 	}
 	vol.DeviceID = uint64(stat.Dev)
 	return nil
+}
+
+func deviceTypeFromMajor(major uint32) Type {
+	// https://www.kernel.org/doc/Documentation/admin-guide/devices.txt
+	switch major {
+	case 1:
+		return DriveRAM
+	case 2:
+		return DriveRemovable
+	case 3:
+		return DriveFixed
+	case 7:
+		return DriveLoopback
+	case 8:
+		return DriveFixed
+	case 11:
+		return DriveOptical
+	default:
+		return DriveUnknown
+	}
 }
